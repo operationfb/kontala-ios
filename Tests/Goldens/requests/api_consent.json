@@ -1,0 +1,78 @@
+{
+  "_comment": "Events held while consent is unknown and released as denied, through the API alone: what every app SDK sends for the same calls.",
+  "capture": {
+    "data_layer": "discover",
+    "clicks": true
+  },
+  "refused": [],
+  "requests": [
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0"
+      },
+      "events": [
+        {
+          "id": "event-1",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:02.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "denied",
+          "screen": {
+            "name": "/"
+          }
+        },
+        {
+          "id": "event-2",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:02.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "denied",
+          "view": "event-1",
+          "properties": {
+            "cold": true
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-3",
+          "event": "size_selected",
+          "timestamp": "2026-10-05T09:15:03.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "denied",
+          "view": "event-1",
+          "properties": {
+            "size": "M"
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:03.000000Z"
+    }
+  ]
+}

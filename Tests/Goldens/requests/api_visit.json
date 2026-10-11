@@ -1,0 +1,347 @@
+{
+  "_comment": "Screens the app names itself, the first opened by a link with UTM tags, a page type and properties, a custom event, identify with traits, a page type declared once its screen view was sent, the app hidden and shown again within its visit: what every app SDK sends for the same calls.",
+  "capture": {
+    "data_layer": "discover",
+    "clicks": true,
+    "scroll": true,
+    "friction": true
+  },
+  "refused": [],
+  "requests": [
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1",
+          "ids": {
+            "idfv": "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
+          },
+          "ad_tracking": "not_determined"
+        }
+      },
+      "events": [
+        {
+          "id": "event-1",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:02.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/",
+            "query": "utm_source=push&utm_campaign=autumn",
+            "navigation": "launch"
+          }
+        },
+        {
+          "id": "event-2",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:02.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "properties": {
+            "cold": true
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-3",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:03.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "engagement": {
+            "trigger": "view",
+            "visible_ms": 1000
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-4",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:03.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/product/42",
+            "navigation": "push",
+            "from": "/"
+          },
+          "page_type": "pdp",
+          "properties": {
+            "product": {
+              "id": "42",
+              "price": 79.0,
+              "tags": [
+                "linen",
+                "summer"
+              ]
+            }
+          }
+        },
+        {
+          "id": "event-5",
+          "event": "wishlisted",
+          "timestamp": "2026-10-05T09:15:04.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "product_id": "42",
+            "sizes": [
+              "M",
+              "L"
+            ]
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-6",
+          "event": "identify",
+          "timestamp": "2026-10-05T09:15:04.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "plan": "pro"
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:06.000000Z"
+    },
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1",
+          "ids": {
+            "idfv": "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
+          },
+          "ad_tracking": "not_determined"
+        }
+      },
+      "events": [
+        {
+          "id": "event-7",
+          "event": "page_type",
+          "timestamp": "2026-10-05T09:15:06.050000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "page_type": "plp",
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-8",
+          "event": "app_backgrounded",
+          "timestamp": "2026-10-05T09:15:07.050000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "foreground_ms": 5050
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-9",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:07.050001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "engagement": {
+            "trigger": "hide",
+            "visible_ms": 4050
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:07.050000Z"
+    },
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1",
+          "ids": {
+            "idfv": "E621E1F8-C36C-495A-93FC-0C247A3E6E5F"
+          },
+          "ad_tracking": "not_determined"
+        }
+      },
+      "events": [
+        {
+          "id": "event-10",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:12.050000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "cold": false,
+            "away_ms": 5000
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-11",
+          "event": "app_backgrounded",
+          "timestamp": "2026-10-05T09:15:13.050000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "foreground_ms": 1000
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-12",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:13.050001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "engagement": {
+            "trigger": "hide",
+            "visible_ms": 5050
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:13.050000Z"
+    }
+  ]
+}
