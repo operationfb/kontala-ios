@@ -188,6 +188,16 @@ public enum Kontala {
         }
     }
 
+    /// A link that opened the app, or that it was sent while running, from `scene(_:openURLContexts:)`, the scene's
+    /// `connectionOptions.urlContexts`, `application(_:open:options:)` or SwiftUI's `.onOpenURL`: the screen it opens
+    /// is a `link`, with the link's query, so its campaign is on the visit. One that opened the app names its launch
+    /// screen while that is unsent: iOS gives a cold start's link only after the first frame, and the launch's screen
+    /// view waits three seconds for it.
+    public static func handle(url: URL) {
+        let link = url.absoluteString
+        call { $0.hub.linkPushed(link) }
+    }
+
     /// Marks the screen on show as fully displayed: its content loaded and drawn. Kontala times the screen to the frame
     /// after it as its time to full display, the web's LCP, where the property captures friction.
     public static func screenReady() { call { $0.screenReady() } }

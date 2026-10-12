@@ -83,8 +83,7 @@
         }
 
         private static func windowSize(_ app: UIApplication) -> (Int, Int)? {
-            let window = app.windows.first { $0.isKeyWindow } ?? app.windows.first
-            let bounds = window?.bounds ?? UIScreen.main.bounds
+            let bounds = ScreenWatcher.keyWindow()?.bounds ?? UIScreen.main.bounds
             let w = Int(bounds.width.rounded())
             let h = Int(bounds.height.rounded())
             return w > 0 && h > 0 ? (w, h) : nil
@@ -144,7 +143,7 @@
         }
 
         func webViewShown(_ frames: Int, _ done: @escaping (Bool) -> Void) {
-            DispatchQueue.main.async { [app] in WebViewFinder.look(app, frames: frames, done) }
+            DispatchQueue.main.async { WebViewFinder.look(ScreenWatcher.keyWindow, frames: frames, done) }
         }
     }
 
@@ -233,26 +232,28 @@
         }
     }
 
-    /// Whether a web view is on show in a window of the app's: one in a window, not hidden, faded out or empty, and
-    /// in no hidden view.
+    /// Whether a web view is on show in the screen in front: one in a window, not hidden, faded out or empty, and in
+    /// no hidden view.
     enum WebViewFinder {
         /// The most views looked at in one look, so a screen of thousands costs a frame at most.
         static let budget = 2000
 
-        static func look(_ app: UIApplication, frames: Int, _ done: @escaping (Bool) -> Void) {
-            if shown(app) || frames <= 1 {
-                done(shown(app))
+        static func look(_ window: @escaping () -> UIWindow?, frames: Int, _ done: @escaping (Bool) -> Void) {
+            let found = shown(window())
+            if found || frames <= 1 {
+                done(found)
                 return
             }
-            NextFrame.after { look(app, frames: frames - 1, done) }
+            NextFrame.after { look(window, frames: frames - 1, done) }
         }
 
-        static func shown(_ app: UIApplication) -> Bool {
+        /// Whether a web view is on show in [window]'s screen in front, where it has one, else anywhere in it.
+        static func shown(_ window: UIWindow?) -> Bool {
+            guard let w = window, !w.isHidden, w.alpha > 0.01 else { return false }
             var left = budget
-            for window in app.windows where !window.isHidden && window.alpha > 0.01 {
-                if contains(window, &left) { return true }
-            }
-            return false
+            let front = w.rootViewController.map { ScreenKinds.front($0) }?.last
+            if let v = front?.viewIfLoaded, v.window != nil { return contains(v, &left) }
+            return contains(w, &left)
         }
 
         private static func contains(_ view: UIView, _ left: inout Int) -> Bool {

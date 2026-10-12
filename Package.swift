@@ -24,7 +24,9 @@ let package = Package(
             dependencies: ["KontalaCore"],
             resources: [.copy("PrivacyInfo.xcprivacy")]
         ),
-        .testTarget(name: "KontalaCoreTests", dependencies: ["KontalaCore"]),
-        .testTarget(name: "KontalaTests", dependencies: ["Kontala"]),
+        // The fakes both suites run the SDK on; no product names it.
+        .target(name: "KontalaTestSupport", dependencies: ["KontalaCore"], path: "Tests/KontalaTestSupport"),
+        .testTarget(name: "KontalaCoreTests", dependencies: ["KontalaCore", "KontalaTestSupport"]),
+        .testTarget(name: "KontalaTests", dependencies: ["Kontala", "KontalaTestSupport"]),
     ]
 )

@@ -15,7 +15,7 @@ package enum NavigationKind: String {
 }
 
 /// What the app declares about a screen: its name, page type and data.
-package struct ScreenDeclaration {
+package struct ScreenDeclaration: Equatable {
     package var name: String?
     package var pageType: KontalaPageType?
     package var properties: JSONObject?
@@ -28,7 +28,8 @@ package struct ScreenDeclaration {
 }
 
 /// What a screen is on the platform, held weakly, so the SDK never keeps a view controller the app has left alive,
-/// and compared by what it holds.
+/// and compared by what it holds. Made on the main thread and handed to the core's queue in place of the view
+/// controller, which is then never the last thing holding one there, where UIKit could not release it.
 package final class RouteRef {
     private weak var ref: AnyObject?
 

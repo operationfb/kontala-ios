@@ -82,7 +82,7 @@ package final class ScreenHub {
     /// the launch's for the first, a link's where a link was just delivered, else the navigation's that began, else
     /// what the source says.
     package func shown(
-        _ raw: String?, _ kind: NavigationKind, declaration: ScreenDeclaration? = nil, route: AnyObject? = nil,
+        _ raw: String?, _ kind: NavigationKind, declaration: ScreenDeclaration? = nil, route: RouteRef? = nil,
         title: String? = nil
     ) {
         if !started { return }
@@ -113,7 +113,7 @@ package final class ScreenHub {
         // Flutter SDK starts none.
         launched = true
         let view = ScreenView(
-            name: n, query: query, kind: resolved, declaration: declaration, route: route.map { RouteRef($0) },
+            name: n, query: query, kind: resolved, declaration: declaration, route: route,
             title: title, link: pendingLink != nil)
         if !foreground {
             // Held until the app is shown, the latest screen alone.

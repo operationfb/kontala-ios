@@ -15,7 +15,6 @@
         private let app: UIApplication
         private var observers: [NSObjectProtocol] = []
         private var state: AppState
-        private var framed = false
 
         init(running: Kontala.Running, platform: ApplePlatform, app: UIApplication, state: AppState) {
             self.running = running
@@ -24,7 +23,8 @@
             self.state = state
         }
 
-        /// Starts listening, on the main thread; the launch's first frame is told as the app is first on show.
+        /// Starts listening, on the main thread. The launch's first frame is the screen watcher's to tell, once it has
+        /// read the first screen.
         func attach() {
             let center = NotificationCenter.default
             func on(_ name: Notification.Name, _ f: @escaping () -> Void) {
@@ -35,7 +35,6 @@
             on(UIApplication.willEnterForegroundNotification) { [weak self] in self?.became(.inactive) }
             on(UIApplication.didEnterBackgroundNotification) { [weak self] in self?.became(.hidden) }
             on(UIDevice.orientationDidChangeNotification) { [weak self] in self?.platform.windowChanged() }
-            if state != .hidden { frame() }
         }
 
         func detach() {
@@ -57,14 +56,6 @@
                 return
             }
             running.post { $0.lifecycleChanged(next) }
-            if !framed { frame() }
-        }
-
-        /// The launch's first frame: the next one the display draws once the app is on show.
-        private func frame() {
-            if framed { return }
-            framed = true
-            NextFrame.after { [running] in running.post { $0.firstFrame() } }
         }
     }
 #endif

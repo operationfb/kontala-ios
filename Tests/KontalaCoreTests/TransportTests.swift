@@ -1,4 +1,5 @@
 import Foundation
+import KontalaTestSupport
 import XCTest
 
 @testable import KontalaCore

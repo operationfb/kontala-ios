@@ -193,8 +193,8 @@ package final class ScreensPlugin: KontalaPlugin {
 
     /// A screen declared itself after its screen view was emitted, as one whose properties change on its first frames
     /// does.
-    package func declared(_ route: AnyObject, _ d: ScreenDeclaration) {
-        guard let ctx = ctx, let s = screen, let v = view, s.route?.isOf(route) == true else { return }
+    package func declared(_ route: RouteRef, _ d: ScreenDeclaration) {
+        guard let ctx = ctx, let s = screen, let v = view, s.route?.same(route) == true else { return }
         let log = ctx.log
         _ = ctx.amend(v) { f in
             if let t = d.pageType { f["page_type"] = .string(t.wire) }

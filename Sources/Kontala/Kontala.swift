@@ -19,7 +19,8 @@
                 DispatchQueue.main.async { start(writeKey: writeKey, endpoint: endpoint, options: options) }
                 return
             }
-            let app = UIApplication.shared
+            // Read through the runtime, where an app extension has no shared application to give.
+            guard let app = UIApplication.value(forKey: "sharedApplication") as? UIApplication else { return }
             let platform = ApplePlatform(app: app)
             let scheduler = QueueScheduler()
             let http = SessionHttp()
@@ -34,10 +35,11 @@
                 clock: Clock(),
                 main: { f in DispatchQueue.main.async(execute: f) },
                 onStop: {
-                    // The observers are the main thread's to take away.
+                    // The observers and the hooks' watcher are the main thread's to take away.
                     DispatchQueue.main.async {
                         lifecycle?.detach()
                         lifecycle = nil
+                        ScreenWatcher.current = nil
                     }
                     scheduler.shutdown()
                     http.close()
@@ -48,13 +50,22 @@
             let l = AppLifecycle(running: r, platform: platform, app: app, state: platform.initialState())
             lifecycle = l
             l.attach()
+            let watcher = ScreenWatcher(signals: CoreScreenSignals(r), window: ScreenWatcher.keyWindow)
+            watcher.warn = r.warn
+            ScreenWatcher.current = watcher
+            UIKitHooks.installed
+            // Started once a screen was on show already: it is read at the next frame, as the launch's.
+            if ScreenWatcher.keyWindow()?.rootViewController != nil { watcher.schedule() }
         }
 
-        /// A link that opened the app, or that it was sent while running, from `scene(_:openURLContexts:)`, the scene's
-        /// `connectionOptions.urlContexts`, `application(_:open:options:)` or SwiftUI's `.onOpenURL`: the screen it
-        /// opens is a `link`, with the link's query, so its campaign is on the visit.
-        public static func handle(url: URL) {
-            current?.post { $0.hub.linkPushed(url.absoluteString) }
+        /// A universal link that opened the app, or that it was sent while running, from `scene(_:continue:)`, the
+        /// scene's `connectionOptions.userActivities` or SwiftUI's `.onContinueUserActivity`: the screen it opens is a
+        /// `link`, as `handle(url:)` says.
+        public static func handle(userActivity: NSUserActivity) {
+            guard userActivity.activityType == NSUserActivityTypeBrowsingWeb, let url = userActivity.webpageURL else {
+                return
+            }
+            handle(url: url)
         }
     }
 #endif
