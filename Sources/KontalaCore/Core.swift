@@ -101,9 +101,11 @@ package final class Core: PluginContext, WebSharingHost {
     package let screens = ScreensPlugin()
     package let lifecycle = LifecyclePlugin()
     package let engagement = EngagementPlugin()
+    package let taps = TapsPlugin()
 
     /// What the main thread reads before it reads a tap, a scroll or friction off the app's views.
-    package private(set) lazy var switches = Switches(now: { [clock] in clock.nowMicros() })
+    /// Made as the core is, so the main thread reads it from its first tap: a lazy one could be made twice.
+    package let switches: Switches
 
     private var plugins: [KontalaPlugin] = []
     private var viewListeners: [(CapturedEvent) -> Void] = []
@@ -156,6 +158,7 @@ package final class Core: PluginContext, WebSharingHost {
         self.scheduler = scheduler
         self.http = http
         self.clock = clock
+        switches = Switches(now: { [clock] in clock.nowMicros() })
     }
 
     /// Starts capturing: binds the plugins and reads what an earlier launch left.
@@ -166,6 +169,7 @@ package final class Core: PluginContext, WebSharingHost {
         // In the Flutter SDK's order, which is the order a view's measures are
         // queued in as it ends and as the app is hidden.
         bound.append(screens)
+        if options.taps { bound.append(taps) }
         if options.lifecycle { bound.append(lifecycle) }
         if options.screens { bound.append(engagement) }
         for p in bound {
@@ -762,6 +766,12 @@ package final class Core: PluginContext, WebSharingHost {
         f.referrer = referrer
         facts = f
         screens.factsLoaded()
+    }
+
+    /// A tap, a click or a key the platform read off the app's views, or a field's form sent from the keyboard.
+    package func tapped(_ press: Press) {
+        if stopped || !options.taps { return }
+        taps.tapped(press)
     }
 
     /// Any screen or dialog opened or closed: an answer to a tap.

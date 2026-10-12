@@ -1,0 +1,269 @@
+{
+  "_comment": "A launch from a deep link with UTM tags, a product opened from its card, its page type and properties, a declared add to cart, a dialog, a login naming its user, a custom event, identify, and the app going to the background.",
+  "capture": {
+    "data_layer": "discover",
+    "clicks": true
+  },
+  "refused": [],
+  "requests": [
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0"
+      },
+      "events": [
+        {
+          "id": "event-1",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:02.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/",
+            "query": "utm_source=push&utm_campaign=autumn"
+          }
+        },
+        {
+          "id": "event-2",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:02.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "properties": {
+            "cold": true
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-3",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:03.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "element": {
+            "role": "button",
+            "text": "Linen shirt",
+            "class": "ProductCard"
+          },
+          "path": "ShopHomeScreen > ProductCard",
+          "region": "main",
+          "input": "touch",
+          "x": 201.0,
+          "y": 180.0,
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-4",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:03.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/product/42"
+          },
+          "page_type": "pdp",
+          "properties": {
+            "product": {
+              "id": "42",
+              "price": 79.0,
+              "tags": [
+                "linen",
+                "summer"
+              ]
+            }
+          }
+        },
+        {
+          "id": "event-5",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:04.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-4",
+          "element": {
+            "role": "button",
+            "text": "Add to cart",
+            "class": "UIButton"
+          },
+          "path": "ShopProductScreen > UIButton",
+          "region": "main",
+          "click_type": "add_to_cart",
+          "input": "touch",
+          "x": 116.0,
+          "y": 142.0,
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-6",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:04.600000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-4",
+          "element": {
+            "role": "button",
+            "text": "Sizes",
+            "class": "UIButton"
+          },
+          "path": "ShopProductScreen > UIButton",
+          "region": "main",
+          "input": "touch",
+          "x": 116.0,
+          "y": 202.0,
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-7",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:05.600000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-4",
+          "element": {
+            "role": "button",
+            "text": "Close",
+            "class": "UIButton"
+          },
+          "path": "ShopProductScreen > UIButton",
+          "region": "main",
+          "input": "touch",
+          "x": 200.0,
+          "y": 462.0,
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-8",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:06.600000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "anna@example.com",
+          "consent": "granted",
+          "view": "event-4",
+          "element": {
+            "role": "button",
+            "text": "Sign in",
+            "class": "UIButton"
+          },
+          "path": "ShopProductScreen > UIButton",
+          "region": "main",
+          "click_type": "login",
+          "input": "touch",
+          "x": 201.0,
+          "y": 692.0,
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-9",
+          "event": "identify",
+          "timestamp": "2026-10-05T09:15:07.200000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "plan": "pro"
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-10",
+          "event": "wishlisted",
+          "timestamp": "2026-10-05T09:15:07.200001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "at": "2026-10-05T09:16:00.000000Z",
+            "product_id": "42",
+            "sizes": [
+              "M",
+              "L"
+            ]
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-11",
+          "event": "app_backgrounded",
+          "timestamp": "2026-10-05T09:15:09.200000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "customer-42",
+          "org": "acme",
+          "consent": "granted",
+          "view": "event-4",
+          "properties": {
+            "foreground_ms": 7200
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:09.200000Z"
+    }
+  ]
+}

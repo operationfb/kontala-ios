@@ -101,6 +101,9 @@
         var warn: (String) -> Void = { _ in }
 
         private var begun = false
+        /// When the last navigation began, in seconds of the system's uptime, the clock UIKit stamps its events with: a
+        /// field that ends its editing then went with its screen.
+        private(set) var begunAt: TimeInterval = -.greatestFiniteMagnitude
         private var kind: NavigationKind?
         private var scheduled = false
         private var framed = false
@@ -179,6 +182,7 @@
         private func begin(_ k: NavigationKind) {
             if begun { return }
             begun = true
+            begunAt = ProcessInfo.processInfo.systemUptime
             kind = k
             signals.begin(k)
             // A navigation that shows nothing new, a view loaded and never shown, is settled at the next frame.
