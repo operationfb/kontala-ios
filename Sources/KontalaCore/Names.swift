@@ -20,6 +20,8 @@ package let reservedEventNames: Set<String> = [
     "checkout_started",
     "checkout_step",
     "purchase",
+    "checkout_alert",
+    "checkout_extension_error",
     "page_view",
     "click",
     "view_time",
