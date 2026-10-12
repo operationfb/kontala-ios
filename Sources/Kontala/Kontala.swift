@@ -40,6 +40,8 @@
                         lifecycle?.detach()
                         lifecycle = nil
                         ScreenWatcher.current = nil
+                        TapReader.current?.stopObserving()
+                        TapReader.current = nil
                     }
                     scheduler.shutdown()
                     http.close()
@@ -54,6 +56,15 @@
             watcher.warn = r.warn
             ScreenWatcher.current = watcher
             UIKitHooks.installed
+            if options.taps {
+                let taps = TapReader(
+                    signals: CoreTapSignals(r), switches: r.core.switches, captureText: options.captureText,
+                    navigationAt: { [weak watcher] in watcher?.begunAt ?? -.greatestFiniteMagnitude },
+                    active: { app.applicationState == .active })
+                TapReader.current = taps
+                taps.observe()
+                TapHooks.installed
+            }
             // Started once a screen was on show already: it is read at the next frame, as the launch's.
             if ScreenWatcher.keyWindow()?.rootViewController != nil { watcher.schedule() }
         }

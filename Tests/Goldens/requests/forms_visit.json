@@ -1,0 +1,268 @@
+{
+  "_comment": "A region on contract 2, the app capturing no scrolling or friction: screens with their titles, how each was reached and the screen before, a login form's values and the user it names, and a search submitted from the keyboard with its term: what every app SDK sends for the same taps.",
+  "capture": {
+    "data_layer": "discover",
+    "clicks": true,
+    "scroll": true,
+    "friction": true
+  },
+  "refused": [],
+  "requests": [
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1"
+        }
+      },
+      "events": [
+        {
+          "id": "event-1",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:02.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/",
+            "title": "Shop",
+            "navigation": "launch"
+          }
+        },
+        {
+          "id": "event-2",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:02.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "properties": {
+            "cold": true
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-3",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:03.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "element": {
+            "role": "button",
+            "text": "Linen shirt",
+            "class": "ProductCard"
+          },
+          "path": "ShopHomeScreen > ProductCard",
+          "region": "main",
+          "input": "touch",
+          "x": 201.0,
+          "y": 180.0,
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-4",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:03.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "engagement": {
+            "trigger": "view",
+            "visible_ms": 1000
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-5",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:03.000002Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/product/42",
+            "title": "Linen shirt",
+            "navigation": "push",
+            "from": "/"
+          },
+          "page_type": "pdp",
+          "properties": {
+            "product": {
+              "id": "42",
+              "price": 79.0,
+              "tags": [
+                "linen",
+                "summer"
+              ]
+            }
+          }
+        },
+        {
+          "id": "event-6",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:04.600000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "user": "anna@example.com",
+          "consent": "granted",
+          "view": "event-5",
+          "element": {
+            "role": "button",
+            "text": "Sign in",
+            "class": "UIButton"
+          },
+          "path": "ShopProductScreen > UIButton",
+          "region": "main",
+          "click_type": "login",
+          "input": "touch",
+          "x": 201.0,
+          "y": 692.0,
+          "trigger": "click",
+          "form": {
+            "fields": [
+              "email",
+              "password"
+            ],
+            "values": {
+              "email": "anna@example.com"
+            }
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-7",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:06.600000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-5",
+          "engagement": {
+            "trigger": "view",
+            "visible_ms": 3600
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-8",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:06.600001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/search",
+            "title": "Search",
+            "navigation": "push",
+            "from": "/product/42"
+          }
+        },
+        {
+          "id": "event-9",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:08.600000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-8",
+          "element": {
+            "role": "searchbox",
+            "label": "Search the shop",
+            "class": "UISearchTextField"
+          },
+          "path": "ShopSearchScreen > UISearchTextField",
+          "region": "main",
+          "input": "keyboard",
+          "trigger": "submit",
+          "search": "linen",
+          "context": {
+            "app": {
+              "screen": "/search"
+            }
+          }
+        },
+        {
+          "id": "event-10",
+          "event": "app_backgrounded",
+          "timestamp": "2026-10-05T09:15:09.600000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-8",
+          "properties": {
+            "foreground_ms": 7600
+          },
+          "context": {
+            "app": {
+              "screen": "/search"
+            }
+          }
+        },
+        {
+          "id": "event-11",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:09.600001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-8",
+          "engagement": {
+            "trigger": "hide",
+            "visible_ms": 3000
+          },
+          "context": {
+            "app": {
+              "screen": "/search"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:09.600000Z"
+    }
+  ]
+}
