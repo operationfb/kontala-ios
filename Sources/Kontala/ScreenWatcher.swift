@@ -418,8 +418,9 @@
 
     extension UIViewController {
         // Each calls what it replaced, which after the exchange is its own selector, and then tells the watcher. They
-        // are `dynamic` so that call goes through the runtime: called directly, as an optimised build may call a method
-        // nothing can override, each would call itself.
+        // are `dynamic` because that call must go through the runtime, which Swift promises only for `dynamic`: called
+        // directly, each would call itself. Xcode 16.4's optimised build went through the runtime without it too
+        // (measured on the simulator on 2026-10-12), which is the compiler's choice and not a promise.
 
         @objc(kontala_viewDidLoad) fileprivate dynamic func kontalaViewDidLoad() {
             kontalaViewDidLoad()
