@@ -22,6 +22,8 @@ package let reservedEventNames: Set<String> = [
     "purchase",
     "checkout_alert",
     "checkout_extension_error",
+    "shopify_webhook",
+    "shopify_order",
     "page_view",
     "click",
     "view_time",
