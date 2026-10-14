@@ -19,7 +19,9 @@ package struct Resolved: Equatable {
 ///   away from it deletes the file and the ids;
 /// - a pinned id lives in memory only and never rotates.
 ///
-/// `last_seen` is written at most once a second, and again on `flush`.
+/// A device or a session just minted is written at once, since a process that ends before the next write would lose it,
+/// and its next launch would be another visitor; `last_seen` alone is written at most once a second, and again on
+/// `flush`.
 package final class Identity {
     package static let file = "identity.json"
 
@@ -87,7 +89,9 @@ package final class Identity {
     /// filed under the session in force, lapsed or not, and a session one starts because there was none is lapsed
     /// from the outset.
     package func resolve(_ nowMs: Int64, _ presence: Presence = .here) -> Resolved {
-        let device = deviceId
+        let minted = pinnedDevice == nil && self.device == nil
+        if minted { self.device = Ids.uuidV4() }
+        let device = pinnedDevice ?? self.device!
         var rotated = false
         let session: String
         if let pinned = pinnedSession {
@@ -103,7 +107,7 @@ package final class Identity {
             if slides && (lastSeen == nil || nowMs > lastSeen!) { lastSeen = nowMs }
         }
         dirty = true
-        if writtenAt == nil || abs(nowMs - writtenAt!) >= 1000 { flush(nowMs) }
+        if minted || rotated || writtenAt == nil || abs(nowMs - writtenAt!) >= 1000 { flush(nowMs) }
         return Resolved(device: device, session: session, rotated: rotated)
     }
 
@@ -129,12 +133,14 @@ package final class Identity {
         dirty = true
     }
 
-    /// The device id in force, minting one if none is.
+    /// The device id in force, minting one if none is, which is written at once.
     package var deviceId: String {
         if let p = pinnedDevice { return p }
         if let d = device { return d }
         let d = Ids.uuidV4()
         device = d
+        dirty = true
+        flush()
         return d
     }
 

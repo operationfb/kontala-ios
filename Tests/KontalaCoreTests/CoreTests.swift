@@ -26,6 +26,55 @@ final class CoreTests: XCTestCase {
             context: ContextSnapshot(appId: "com.example.shop", libraryName: "kontala-ios", libraryVersion: "0"))
     }
 
+    /// Now as the identity's own write stamps it, the wall clock in milliseconds.
+    private var wallMillis: Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+
+    func testTheIdsTheLaunchsFirstEventMintsAreWrittenAtOnce() {
+        // The ids are loaded, and the file written, just before the launch's first event mints them: a process that ends
+        // before the next write must not lose them, or its next launch is another visitor.
+        let dir = tempDir()
+        let id = Identity(store: FileStore(baseDir: dir))
+        id.setStorageAllowed(true)
+        let a = id.resolve(wallMillis + 100)
+        let kept = FileStore(baseDir: dir).readJson(Identity.file)
+        XCTAssertEqual(a.device, kept?.str("device"))
+        XCTAssertEqual(a.session, kept?.obj("session")?.str("id"))
+    }
+
+    func testANewSessionIsWrittenAtOnceHoweverSoonAfterTheLastWrite() {
+        let store = FileStore(baseDir: tempDir())
+        let id = Identity(store: store, timeoutMillis: 300)
+        id.setStorageAllowed(true)
+        let now = wallMillis
+        let a = id.resolve(now + 100)
+        let b = id.resolve(now + 500)
+        XCTAssertTrue(b.rotated)
+        XCTAssertNotEqual(a.session, b.session)
+        XCTAssertEqual(b.session, store.readJson(Identity.file)?.obj("session")?.str("id"))
+    }
+
+    func testTheSessionsLastActivityAloneWaitsForTheOnceASecondWrite() {
+        let store = FileStore(baseDir: tempDir())
+        let id = Identity(store: store)
+        id.setStorageAllowed(true)
+        let now = wallMillis
+        func lastSeen() -> Int64? { store.readJson(Identity.file)?.obj("session")?.long("last_seen") }
+        _ = id.resolve(now + 100)
+        _ = id.resolve(now + 500)
+        XCTAssertEqual(now + 100, lastSeen())
+        _ = id.resolve(now + 1200)
+        XCTAssertEqual(now + 1200, lastSeen())
+    }
+
+    func testADeviceReadBeforeAnyEventAsTheWebViewsCookiesAreIsWrittenAsItIsMinted() {
+        let dir = tempDir()
+        let id = Identity(store: FileStore(baseDir: dir))
+        id.setStorageAllowed(true)
+        let device = id.deviceId
+        XCTAssertEqual(device, FileStore(baseDir: dir).readJson(Identity.file)?.str("device"))
+        XCTAssertEqual(device, id.resolve(wallMillis).device)
+    }
+
     func testIdentityWritesNothingWhileStorageIsNotAllowedAndDeletesWhatItWroteWhenItStopsBeing() {
         let store = FileStore(baseDir: tempDir())
         let id = Identity(store: store)
