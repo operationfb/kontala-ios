@@ -39,6 +39,18 @@ final class WebViewsTests: XCTestCase {
         return s
     }
 
+    /// A launch whose configuration waits until the test releases it, as a slow network keeps it, from a region on
+    /// contract 2 whose property shows the shop in its web views (`web_views`).
+    private func firstLaunch(_ store: FakeCookieStore, _ options: KontalaOptions = KontalaOptions()) -> Session {
+        var served = contract2()
+        served["web_views"] = ["origins": .array([.object(["origin": .string(shop)])])]
+        let s = startKontala(
+            options, facts: testFacts(storageDir: dir), served: served, cookies: store, holdConfig: true)
+        Kontala.screen("/")
+        s.scheduler.runDue()
+        return s
+    }
+
     /// Whether the websites have the app's ids yet.
     private func ready(_ s: Session) -> Bool {
         var done = false
@@ -97,6 +109,57 @@ final class WebViewsTests: XCTestCase {
         let header = store.writes.first { $0.url == "\(shop)/" && $0.name == WebViews.deviceCookie }!.header
         XCTAssertEqual("pt_did=\(view.str("device")!); Max-Age=63072000; Path=/; SameSite=Lax; Secure", header)
         XCTAssertFalse(store.byUrl.keys.contains { $0.contains("not an origin") })
+        s.finish()
+    }
+
+    func testAFirstLaunchIsReadyAtOnceAndGivesTheWebsitesItsConfigurationNamesTheIdsAsItAnswers() {
+        let store = FakeCookieStore()
+        // Nothing is kept yet and the options name no website: which websites the app shows is the configuration's to
+        // say, which a slow network holds back.
+        let s = firstLaunch(store)
+        XCTAssertTrue(ready(s))
+        XCTAssertTrue(store.writes.isEmpty)
+        s.collector.releaseConfig()
+        s.scheduler.runDue()
+        s.sendAll()
+
+        XCTAssertEqual(s.collector.named("page_view").count, 1)
+        let view = s.collector.named("page_view").first!
+        XCTAssertEqual(view.str("device"), store.byUrl["\(shop)/"]?[WebViews.deviceCookie])
+        XCTAssertEqual(view.str("session"), store.session("\(shop)/")?.id)
+        s.finish()
+    }
+
+    func testAWebViewOnShowIsReadBackOnceALateConfigurationNamesItsWebsite() {
+        let s = firstLaunch(FakeCookieStore(), KontalaOptions(debug: true))
+        XCTAssertTrue(ready(s))
+        // The visitor opens a web view before the configuration has answered.
+        s.platform.webViewOnShow = true
+        sizeGuide(s)
+        let polling = "[kontala] a web view is on show: its pages' visit is read back every minute"
+        XCTAssertFalse(s.platform.lines.contains(polling))
+        s.collector.releaseConfig()
+        s.scheduler.runDue()
+        XCTAssertTrue(s.platform.lines.contains(polling))
+        s.finish()
+    }
+
+    func testALaunchThatKnowsItsWebsitesFromItsOptionsOrKeptWritesTheIdsBeforeItIsReady() {
+        let store = FakeCookieStore()
+        var s = firstLaunch(store, KontalaOptions(webOrigins: [shop]))
+        XCTAssertTrue(ready(s))
+        XCTAssertNotNil(store.session("\(shop)/"))
+        s.collector.releaseConfig()
+        s.scheduler.runDue()
+        s.finish()
+
+        // The next launch names no website, but kept the configuration the first one read.
+        store.writes.removeAll()
+        s = firstLaunch(store)
+        XCTAssertTrue(ready(s))
+        XCTAssertFalse(store.writes.isEmpty)
+        s.collector.releaseConfig()
+        s.scheduler.runDue()
         s.finish()
     }
 

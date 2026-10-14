@@ -119,6 +119,11 @@ package final class FakeCollector: Http {
     package var hold = false
     private var held: [() -> Void] = []
 
+    /// Whether a read of the configuration is answered at once (the default) or kept for `releaseConfig`, as a slow
+    /// network keeps a first launch's.
+    package var holdConfig = false
+    private var heldConfig: [() -> Void] = []
+
     package init() {}
 
     package var events: [JSONObject] { requests.flatMap { ($0.list("events") ?? []).compactMap { $0.object } } }
@@ -155,19 +160,21 @@ package final class FakeCollector: Http {
 
     package func get(_ url: String, _ headers: [String: String], _ done: @escaping (HttpAnswer?, Error?) -> Void) {
         configHeaders.append(headers)
-        if let s = configStatus {
-            done(HttpAnswer(s), nil)
-            return
-        }
-        guard let s = served else {
-            done(HttpAnswer(404, Data("404 page not found\n".utf8)), nil)
-            return
-        }
-        if let rev = s.str("rev"), headers["If-None-Match"] == "\"\(rev)\"" {
-            done(HttpAnswer(304), nil)
-            return
-        }
-        done(HttpAnswer(200, Data(Json.encode(s).utf8)), nil)
+        let a = configAnswer(headers)
+        if holdConfig { heldConfig.append { done(a, nil) } } else { done(a, nil) }
+    }
+
+    package func releaseConfig() {
+        let h = heldConfig
+        heldConfig.removeAll()
+        for f in h { f() }
+    }
+
+    private func configAnswer(_ headers: [String: String]) -> HttpAnswer {
+        if let s = configStatus { return HttpAnswer(s) }
+        guard let s = served else { return HttpAnswer(404, Data("404 page not found\n".utf8)) }
+        if let rev = s.str("rev"), headers["If-None-Match"] == "\"\(rev)\"" { return HttpAnswer(304) }
+        return HttpAnswer(200, Data(Json.encode(s).utf8))
     }
 }
 
@@ -366,11 +373,13 @@ package func startKontala(
     ids: DeviceIds? = nil,
     state: AppState = .resumed,
     start: Int64 = goldenStartMicros,
-    cookies: FakeCookieStore? = nil
+    cookies: FakeCookieStore? = nil,
+    holdConfig: Bool = false
 ) -> Session {
     let scheduler = FakeScheduler(nowMicros: start)
     let collector = FakeCollector()
     collector.served = served
+    collector.holdConfig = holdConfig
     let platform = FakePlatform(facts: facts, state: state, ids: ids)
     platform.cookies = cookies
     guard

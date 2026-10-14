@@ -158,11 +158,15 @@ package final class WebSharing {
         }
         let changed = out.count != origins.count || !origins.allSatisfy { out.contains($0) }
         origins = out
-        if changed && active { write(force: true) }
+        if !changed { return }
+        if active { write(force: true) }
+        // Websites named once the SDK was ready, by a configuration that answered late, are read back from then on too.
+        if readyDone { updatePoll() }
     }
 
     /// The SDK has loaded its ids: the page's activity is read back and the app's ids written before `whenReady`
-    /// answers, within half a second, so a platform that never answers holds no web view back.
+    /// answers, within half a second, so a platform that never answers holds no web view back. A first launch keeps no
+    /// configuration yet, so the websites only it names are not known here: they are written as it answers.
     package func loaded() {
         originsChanged()
         if !active {
