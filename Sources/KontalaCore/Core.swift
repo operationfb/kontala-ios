@@ -508,7 +508,12 @@ package final class Core: PluginContext, WebSharingHost {
         let until = clock.nowMicros() + Core.containerWaitMicros
         if v.settleUntilMicros == nil || v.settleUntilMicros! < until { v.settleUntilMicros = until }
         queue?.touched()
-        if webViews.answered(webView) { webPageAnswered(webView) }
+        // A page that answered before its screen was shown, as one that loads fast does while its screen is still
+        // coming in, is decided on once the screen view waits in the queue, and by the share of the window its web view
+        // covers now that the screen is in.
+        if webViews.answered(webView) {
+            webViews.measure(webView) { [weak self] in self?.webPageAnswered(webView) }
+        }
     }
 
     package func webPageAnswered(_ attachment: WebAttachment) {
@@ -516,6 +521,9 @@ package final class Core: PluginContext, WebSharingHost {
         // screen, covering half the window or more, makes it a container of web pages.
         if containers.contains(where: { $0.attachment === attachment }) && webViews.coverage(attachment) < 0.5 {
             containers.removeAll { $0.attachment === attachment }
+            log(
+                "a web view covering \(Int((webViews.coverage(attachment) * 100).rounded()))% of its window "
+                    + "answered: it is a part of its screen, which keeps its screen view")
             return
         }
         for c in containers where c.attachment === attachment {

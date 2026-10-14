@@ -12,6 +12,9 @@
         /// the main thread. [writeKey] is the property's public write key, and [endpoint] the Events API URL Kontala
         /// shows beside it.
         ///
+        /// SwiftUI runs a SwiftUI app's `App.init` before UIKit has made the app, so a start there begins as the app
+        /// finishes launching, where an app delegate's start runs; what the app calls meanwhile is kept for it.
+        ///
         /// ```swift
         /// Kontala.start(writeKey: "pk_live_...", endpoint: "https://konta.la/v1/events")
         /// ```
@@ -20,8 +23,12 @@
                 DispatchQueue.main.async { start(writeKey: writeKey, endpoint: endpoint, options: options) }
                 return
             }
-            // Read through the runtime, where an app extension has no shared application to give.
-            guard let app = UIApplication.value(forKey: "sharedApplication") as? UIApplication else { return }
+            Launch.when(Launch.sharedApplication) { app in
+                begin(app, writeKey: writeKey, endpoint: endpoint, options: options)
+            }
+        }
+
+        private static func begin(_ app: UIApplication, writeKey: String, endpoint: String, options: KontalaOptions) {
             let platform = ApplePlatform(app: app)
             let scheduler = QueueScheduler()
             let http = SessionHttp()

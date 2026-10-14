@@ -163,6 +163,13 @@ final class ShopVisitUITests: XCTestCase {
         app.buttons["Sign in"].tap()
         XCTAssertTrue(app.staticTexts["anna@example.com"].waitForExistence(timeout: 3))
         home(app)
+        // iOS 26 offers to save the password the form sent once its screen has gone, in a sheet over the whole app,
+        // which takes every tap.
+        let notNow = app.buttons["Not Now"]
+        if notNow.waitForExistence(timeout: 3) {
+            notNow.tap()
+            XCTAssertTrue(notNow.waitForNonExistence(timeout: 5))
+        }
 
         app.buttons["search"].tap()
         let box = app.textFields["Search the shop"]

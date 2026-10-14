@@ -475,6 +475,19 @@ package final class WebSharing {
 
     package func coverage(_ a: WebAttachment) -> Double { (a as? Attachment)?.coverage ?? 0 }
 
+    /// Measures again the share of its window [a]'s web view covers, and runs [then] on the core's queue once it has.
+    package func measure(_ a: WebAttachment, _ then: @escaping () -> Void) {
+        guard let a = a as? Attachment, !a.detached else { return }
+        a.webView.inspect { [weak self] _, coverage in
+            guard let self = self else { return }
+            self.scheduler.post {
+                if self.stopped || a.detached { return }
+                a.coverage = coverage
+                then()
+            }
+        }
+    }
+
     package func stop() {
         stopped = true
         poll?.cancel()

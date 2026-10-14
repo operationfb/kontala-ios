@@ -317,6 +317,60 @@ final class WebViewsTests: XCTestCase {
         s.finish()
     }
 
+    func testIsNoScreenViewOfItsOwnWhenItsPageAnsweredBeforeItsScreenWasShown() {
+        let s = start()
+        let webView = FakeWebView(url: "\(shop)/size-guide", coverage: 1)
+        var attachment: WebAttachment?
+        s.onCore { core in
+            core.hub.begin(.push)
+            attachment = core.attachWebView(webView)
+        }
+        // A page that loads fast says hello while its screen is still coming in, before the screen is read.
+        receive(s, attachment!, hello)
+        s.onCore { core in core.hub.shown("/size-guide", .push) }
+        s.advanceMillis(6_000)
+        s.sendAll()
+
+        XCTAssertEqual(["/"], screens(s))
+        s.finish()
+    }
+
+    func testMeasuresAWebViewAgainOnceTheScreenItAnsweredOnIsShown() {
+        let s = start()
+        // A third of the window as its page answers, sliding in with its screen, and all of it once the screen is in.
+        let webView = FakeWebView(url: "\(shop)/size-guide", coverage: 0.3)
+        var attachment: WebAttachment?
+        s.onCore { core in
+            core.hub.begin(.push)
+            attachment = core.attachWebView(webView)
+        }
+        receive(s, attachment!, hello)
+        webView.coverage = 1
+        s.onCore { core in core.hub.shown("/size-guide", .push) }
+        s.advanceMillis(6_000)
+        s.sendAll()
+
+        XCTAssertEqual(["/"], screens(s))
+        s.finish()
+    }
+
+    func testKeepsItsScreenViewWhenThePartOfTheScreenItIsAnsweredBeforeTheScreenWasShown() {
+        let s = start()
+        let webView = FakeWebView(url: "\(shop)/banner", coverage: 0.2)
+        var attachment: WebAttachment?
+        s.onCore { core in
+            core.hub.begin(.push)
+            attachment = core.attachWebView(webView)
+        }
+        receive(s, attachment!, hello)
+        s.onCore { core in core.hub.shown("/size-guide", .push) }
+        s.advanceMillis(6_000)
+        s.sendAll()
+
+        XCTAssertEqual(["/", "/size-guide"], screens(s))
+        s.finish()
+    }
+
     func testKeepsItsScreenViewWhenNoPageAnswers() {
         let s = start()
         let webView = FakeWebView(url: "https://elsewhere.example.org/", coverage: 1)
