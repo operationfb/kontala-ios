@@ -1,0 +1,401 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+/* Begin PBXBuildFile section */
+		E231E69C8038CC882F8BF35D = {isa = PBXBuildFile; fileRef = F30429CC5861CB77B975CE9A; };
+		CA4708843333545AD6D35A4E = {isa = PBXBuildFile; fileRef = 734B10B4BB609A7D6BE38A18; };
+		EAD3DFF781AB920FC06FDCC7 = {isa = PBXBuildFile; fileRef = 2BC5AC80B836614831249760; };
+		25D8610667E35BCA9CB9F2DC = {isa = PBXBuildFile; fileRef = B438C0B43C101F4CC1A11873; };
+		99FD77611ED0DBA87AFF510E = {isa = PBXBuildFile; fileRef = 16F6E5491C019469082B510B; };
+		0B0B37923C3A9EF6998FF3BA = {isa = PBXBuildFile; fileRef = 279F097DAB7DD15225A676B3; };
+		65ED708594B03AD432F9FC14 = {isa = PBXBuildFile; fileRef = 2B8A8BD08E3F5A752E5CC169; };
+		FDC99AB812D47523DBB4D7BD = {isa = PBXBuildFile; fileRef = 535789BC2CE9AD5B797A1E42; };
+		D0F2C45FA13E64F7D465BCE5 = {isa = PBXBuildFile; productRef = 39BB4277BCE06A058EB82F09; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		431387EB7262E1CFC79B125E = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 46F86FAA6BBF9AC94A7E4595;
+			proxyType = 1;
+			remoteGlobalIDString = 6439CF22188FA14BBD363342;
+			remoteInfo = KontalaShop;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		F30429CC5861CB77B975CE9A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		734B10B4BB609A7D6BE38A18 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartViewController.swift; sourceTree = "<group>"; };
+		2BC5AC80B836614831249760 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryViewController.swift; sourceTree = "<group>"; };
+		B438C0B43C101F4CC1A11873 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
+		16F6E5491C019469082B510B = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductViewController.swift; sourceTree = "<group>"; };
+		279F097DAB7DD15225A676B3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shop.swift; sourceTree = "<group>"; };
+		2B8A8BD08E3F5A752E5CC169 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIScreens.swift; sourceTree = "<group>"; };
+		535789BC2CE9AD5B797A1E42 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopVisitUITests.swift; sourceTree = "<group>"; };
+		C2E832810DD94AD7A5FA8C4A = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7BCCADA3021C07D12E775CB5 = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KontalaShop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		195F9293022CEE80C9E8D0C0 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KontalaShopUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		56BAF137DAAFD967197255D3 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D0F2C45FA13E64F7D465BCE5,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		72EAF812E2D653AC0BDA8C73 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		5928955287B8089ED2177128 = {
+			isa = PBXGroup;
+			children = (
+				095FEE2E633C50D24407F2D6,
+				516831D832DDC7318520265A,
+				BF7A2D27A78D590BDEF15AF2,
+			);
+			sourceTree = "<group>";
+		};
+		BF7A2D27A78D590BDEF15AF2 = {
+			isa = PBXGroup;
+			children = (
+				7BCCADA3021C07D12E775CB5,
+				195F9293022CEE80C9E8D0C0,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		095FEE2E633C50D24407F2D6 = {
+			isa = PBXGroup;
+			children = (
+				F30429CC5861CB77B975CE9A,
+				734B10B4BB609A7D6BE38A18,
+				2BC5AC80B836614831249760,
+				B438C0B43C101F4CC1A11873,
+				16F6E5491C019469082B510B,
+				279F097DAB7DD15225A676B3,
+				2B8A8BD08E3F5A752E5CC169,
+				C2E832810DD94AD7A5FA8C4A,
+			);
+			path = KontalaShop;
+			sourceTree = "<group>";
+		};
+		516831D832DDC7318520265A = {
+			isa = PBXGroup;
+			children = (
+				535789BC2CE9AD5B797A1E42,
+			);
+			path = KontalaShopUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		6439CF22188FA14BBD363342 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E850913E5F419DF1836B1B18;
+			buildPhases = (
+				869AA75568406BC6181D282D,
+				56BAF137DAAFD967197255D3,
+				77417434AB4C68AD87C05857,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KontalaShop;
+			packageProductDependencies = (
+				39BB4277BCE06A058EB82F09,
+			);
+			productName = KontalaShop;
+			productReference = 7BCCADA3021C07D12E775CB5;
+			productType = "com.apple.product-type.application";
+		};
+		BA128F9D3C0D15FFB32AEEA8 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 48EA9C817F74F26250070E59;
+			buildPhases = (
+				6E010B3D85AA514D3FB28B7F,
+				72EAF812E2D653AC0BDA8C73,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E54DEBD65D8142E7785275AA,
+			);
+			name = KontalaShopUITests;
+			productName = KontalaShopUITests;
+			productReference = 195F9293022CEE80C9E8D0C0;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46F86FAA6BBF9AC94A7E4595 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1640;
+				LastUpgradeCheck = 1640;
+				TargetAttributes = {
+					BA128F9D3C0D15FFB32AEEA8 = {
+						TestTargetID = 6439CF22188FA14BBD363342;
+					};
+				};
+			};
+			buildConfigurationList = 9D908D8792E5642B2623649E;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 5928955287B8089ED2177128;
+			packageReferences = (
+				60A9CE1158622DDD1BF0380F,
+			);
+			productRefGroup = BF7A2D27A78D590BDEF15AF2;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6439CF22188FA14BBD363342,
+				BA128F9D3C0D15FFB32AEEA8,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		77417434AB4C68AD87C05857 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		869AA75568406BC6181D282D = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E231E69C8038CC882F8BF35D,
+				CA4708843333545AD6D35A4E,
+				EAD3DFF781AB920FC06FDCC7,
+				25D8610667E35BCA9CB9F2DC,
+				99FD77611ED0DBA87AFF510E,
+				0B0B37923C3A9EF6998FF3BA,
+				65ED708594B03AD432F9FC14,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6E010B3D85AA514D3FB28B7F = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FDC99AB812D47523DBB4D7BD,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E54DEBD65D8142E7785275AA = {
+			isa = PBXTargetDependency;
+			target = 6439CF22188FA14BBD363342;
+			targetProxy = 431387EB7262E1CFC79B125E;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		189D56DE85F89520581145D8 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		30547E9EC5F49CB55604B54F = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		0F9FC8EE2C99E07A9753399D = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = KontalaShop/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				KONTALA_COLLECTOR = "http://localhost:8788";
+				KONTALA_SESSION_MINUTES = 30;
+				KONTALA_WEBSITE = "http://localhost:4173";
+				KONTALA_WEBVIEW = attached;
+				KONTALA_WRITE_KEY = pk_live_demo_000000000000000000000000;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = la.konta.example.shop;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		1483FA26082F598A11F242FF = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = KontalaShop/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				KONTALA_COLLECTOR = "http://localhost:8788";
+				KONTALA_SESSION_MINUTES = 30;
+				KONTALA_WEBSITE = "http://localhost:4173";
+				KONTALA_WEBVIEW = attached;
+				KONTALA_WRITE_KEY = pk_live_demo_000000000000000000000000;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = la.konta.example.shop;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		7CB61F3D2D3B2A7FBA3915B0 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = la.konta.example.shop.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = KontalaShop;
+			};
+			name = Debug;
+		};
+		C3B1D3E1EA0DF0CA96EE4015 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = la.konta.example.shop.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = KontalaShop;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		9D908D8792E5642B2623649E = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				189D56DE85F89520581145D8,
+				30547E9EC5F49CB55604B54F,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E850913E5F419DF1836B1B18 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F9FC8EE2C99E07A9753399D,
+				1483FA26082F598A11F242FF,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		48EA9C817F74F26250070E59 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7CB61F3D2D3B2A7FBA3915B0,
+				C3B1D3E1EA0DF0CA96EE4015,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		60A9CE1158622DDD1BF0380F = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "..";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		39BB4277BCE06A058EB82F09 = {
+			isa = XCSwiftPackageProductDependency;
+			productName = Kontala;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 46F86FAA6BBF9AC94A7E4595;
+}
