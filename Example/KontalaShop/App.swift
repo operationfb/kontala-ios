@@ -22,12 +22,13 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        // As the app starts, on the main thread: the launch's screen is read at its first frame.
+        // As the app starts, on the main thread: the launch's screen is read at its first frame. The website is
+        // named for a development server's sake, which no property lists; an empty one names none.
         Kontala.start(
             writeKey: Settings.writeKey, endpoint: "\(Settings.collector)/v1/events",
             options: KontalaOptions(
                 debug: true, sessionTimeout: TimeInterval(Settings.sessionMinutes * 60), flushInterval: 5,
-                webOrigins: [Settings.website]))
+                webOrigins: Settings.website.isEmpty ? [] : [Settings.website]))
         return true
     }
 

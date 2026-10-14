@@ -8,6 +8,7 @@
 /* Begin PBXBuildFile section */
 		E231E69C8038CC882F8BF35D = {isa = PBXBuildFile; fileRef = F30429CC5861CB77B975CE9A; };
 		CA4708843333545AD6D35A4E = {isa = PBXBuildFile; fileRef = 734B10B4BB609A7D6BE38A18; };
+		3AD10022E9A8ED663BE5F56D = {isa = PBXBuildFile; fileRef = 5E5876880830FA893B4548F3; };
 		EAD3DFF781AB920FC06FDCC7 = {isa = PBXBuildFile; fileRef = 2BC5AC80B836614831249760; };
 		25D8610667E35BCA9CB9F2DC = {isa = PBXBuildFile; fileRef = B438C0B43C101F4CC1A11873; };
 		99FD77611ED0DBA87AFF510E = {isa = PBXBuildFile; fileRef = 16F6E5491C019469082B510B; };
@@ -30,6 +31,7 @@
 /* Begin PBXFileReference section */
 		F30429CC5861CB77B975CE9A = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		734B10B4BB609A7D6BE38A18 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CartViewController.swift; sourceTree = "<group>"; };
+		5E5876880830FA893B4548F3 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryPage.swift; sourceTree = "<group>"; };
 		2BC5AC80B836614831249760 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeliveryViewController.swift; sourceTree = "<group>"; };
 		B438C0B43C101F4CC1A11873 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		16F6E5491C019469082B510B = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductViewController.swift; sourceTree = "<group>"; };
@@ -83,6 +85,7 @@
 			children = (
 				F30429CC5861CB77B975CE9A,
 				734B10B4BB609A7D6BE38A18,
+				5E5876880830FA893B4548F3,
 				2BC5AC80B836614831249760,
 				B438C0B43C101F4CC1A11873,
 				16F6E5491C019469082B510B,
@@ -195,6 +198,7 @@
 			files = (
 				E231E69C8038CC882F8BF35D,
 				CA4708843333545AD6D35A4E,
+				3AD10022E9A8ED663BE5F56D,
 				EAD3DFF781AB920FC06FDCC7,
 				25D8610667E35BCA9CB9F2DC,
 				99FD77611ED0DBA87AFF510E,

@@ -653,13 +653,23 @@
 
         private static func maskedView(_ v: UIView) -> Bool { v.kontalaMask || v.kontalaIgnore }
 
+        /// Whether a SwiftUI mask or ignore mark covers [v], a field or a choice SwiftUI shows: a mark is a view behind
+        /// the SwiftUI view it modifies, never one around the UIKit view SwiftUI shows for it, so what is under it is
+        /// what its frame holds. Until 2026-10-14 a form read the field of a masked `TextField`, a card's number in the
+        /// demo shop's checkout among them.
+        private static func underMark(_ v: UIView) -> Bool {
+            guard let window = v.window else { return false }
+            let centre = v.convert(CGPoint(x: v.bounds.midX, y: v.bounds.midY), to: nil)
+            return TapMarks.at(centre, in: window).contains { $0.kind == .mask || $0.kind == .ignore }
+        }
+
         private static func holdsField(_ scope: UIView, _ skip: UIView?, _ budget: inout Int) -> Bool {
             var found = false
             func visit(_ v: UIView) {
                 budget -= 1
                 if found || budget < 0 || v === skip || maskedView(v) { return }
                 if isField(v) {
-                    found = true
+                    found = !underMark(v)
                     return
                 }
                 for s in v.subviews { visit(s) }
@@ -710,7 +720,7 @@
                 budget -= 1
                 if budget < 0 || out.count >= 64 || maskedView(v) { return }
                 if isField(v) {
-                    out.append(fieldInfo(v))
+                    if !underMark(v) { out.append(fieldInfo(v)) }
                     return
                 }
                 for s in ordered(v.subviews) { visit(s) }
@@ -726,6 +736,8 @@
             func visit(_ v: UIView) {
                 budget -= 1
                 if budget < 0 || maskedView(v) { return }
+                let read = isField(v) || v is UISwitch || v is UISegmentedControl || v is UISlider || v is UIStepper
+                if read && underMark(v) { return }
                 if isField(v) {
                     out.append(.text(fieldInfo(v)))
                 } else if let s = v as? UISwitch {

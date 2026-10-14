@@ -26,6 +26,7 @@ struct CheckoutView: View {
                     TextField("Full name", text: $name).textContentType(.name)
                     TextField("Street", text: $street).textContentType(.streetAddressLine1)
                     TextField("Postcode", text: $postcode).textContentType(.postalCode)
+                    Button("Delivery and returns") { navigator.delivery() }.kontalaEvent(id: "delivery_and_returns")
                 }
                 Section("Payment") {
                     // Masked: a tap here names nothing but that it was a field.

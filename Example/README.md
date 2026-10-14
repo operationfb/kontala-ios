@@ -6,10 +6,11 @@ Half of it is UIKit and half SwiftUI, each SwiftUI screen in a hosting controlle
 - **Home** (UIKit): a paged carousel of campaigns a swipe moves, and the products in a table, with search, account and the cart in the navigation bar.
 - **Product** (UIKit): declared a product page with its data, a declared add to cart that says on the page how many are in the cart, a photo that loads before the page calls `Kontala.screenReady()`, a disabled button, one nothing answers, and one that answers three seconds late.
 - **Cart** (UIKit): what is in the basket, and a declared begin checkout, disabled while it is empty.
-- **Checkout** (SwiftUI): address fields told apart by their content types, a card number the app masks, a declared purchase, and the order's confirmation.
+- **Checkout** (SwiftUI): address fields told apart by their content types, a card number the app masks, the way to Delivery and returns, a declared purchase, and the order's confirmation.
 - **Account** (SwiftUI): a declared login whose email names who signs in, the keyboard's Done on the password, iOS's tracking prompt, and the app's own analytics consent, which the pages it shows take as theirs.
 - **Search** (SwiftUI): the keyboard's Search sends the box's term, and a result opens its product.
 - **Delivery and returns** (UIKit, from a product): `example/in-app.html`, a page of the shop's website with the Kontala tag on it, in a `WKWebView` attached with `Kontala.attachWebView`, so the page is the app's visitor and visit, takes the app's consent and signed-in user, and counts the screen with its own page views.
+  From the checkout, the same page in SwiftUI (`DeliveryPage`), whose own `UIViewRepresentable` attaches its web view as it makes it and detaches it as SwiftUI takes it down.
 
 **Size guide crashes the app on purpose**: an Objective-C exception nothing catches ends the app, and the next launch sends its `js_error`.
 
@@ -31,6 +32,9 @@ Half of it is UIKit and half SwiftUI, each SwiftUI screen in a hosting controlle
 
 `KontalaShopUITests` drives a visit through every screen with real touches: `xcodebuild test -project KontalaShop.xcodeproj -scheme KontalaShop -destination 'platform=iOS Simulator,name=iPhone 16' -parallel-testing-enabled NO`.
 `testThePageKeepsTheAppsVisit`, run alone with `KONTALA_SESSION_MINUTES=2`, stays three and a half minutes on Delivery and returns, its page changing route every 50 seconds, and comes back to the app in the same visit.
+`testTheAppKeepsThePagesVisit`, run the same way, stays three and a half minutes in the app with a tap every 50 seconds, and opens Delivery and returns again, whose page continues the visit; with `KONTALA_WEBVIEW=none` only the cookies the app slid can carry it.
+`testColdLaunches` launches the shop seven times, sending each launch's speed; run alone once as it is and once with `KONTALA_WRITE_KEY=` a key whose property lists no website and `KONTALA_WEBSITE=` (empty), it compares a launch with websites to share against one with none, and the first launch of each, which reads the configuration from the network, is the one to leave out.
+A key with no website is one added to a copy of `collector/tenants.example.json` with `"allowed_origins": []`, which `TENANT_CONFIG_PATH` names to the collector.
 XCUITest turns accessibility on, and the SDK reads none of what iOS makes up for it, so its rows are what a visitor's would be.
 
 A link opens a product with a campaign's tags:

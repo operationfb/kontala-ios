@@ -54,5 +54,13 @@ final class Navigator: ObservableObject {
 
     func open(_ p: Product) { navigation?.pushViewController(ProductViewController(product: p), animated: true) }
 
+    /// Delivery and returns, SwiftUI's version.
+    func delivery() {
+        let host = UIHostingController(rootView: DeliveryPage())
+        host.title = "Delivery and returns"
+        host.navigationItem.largeTitleDisplayMode = .never
+        navigation?.pushViewController(host, animated: true)
+    }
+
     func back() { navigation?.popToRootViewController(animated: true) }
 }

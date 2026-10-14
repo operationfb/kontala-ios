@@ -2,8 +2,9 @@ import XCTest
 
 /// A visit through the shop with real touches, for an end-to-end run against a local collector (README.md): the
 /// carousel swiped, a product opened, added to the cart, a rage tap, a dead, a late and a disabled one, Delivery and
-/// returns, a checkout, a login, a search from the keyboard, the app to the background and back, and the size guide's
-/// exception, sent by the next launch. It asserts what the app shows; what was sent is read from the collector.
+/// returns from the product and from the checkout, a checkout, a login, a search from the keyboard, the app to the
+/// background and back, and the size guide's exception, sent by the next launch. It asserts what the app shows; what
+/// was sent is read from the collector.
 final class ShopVisitUITests: XCTestCase {
     private func centre(_ e: XCUIElement) -> XCUICoordinate {
         e.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
@@ -15,18 +16,24 @@ final class ShopVisitUITests: XCTestCase {
             thenHoldForDuration: 0)
     }
 
-    /// Back to home, however many screens away it is.
-    private func home(_ app: XCUIApplication) {
-        for _ in 0..<5 where !app.buttons["search"].exists {
+    /// Back until [shown] is on show, however many screens away it is.
+    private func back(_ app: XCUIApplication, until shown: XCUIElement) {
+        for _ in 0..<5 where !shown.exists {
             app.navigationBars.buttons.element(boundBy: 0).tap()
             sleep(1)
         }
     }
 
+    /// Back to home.
+    private func home(_ app: XCUIApplication) { back(app, until: app.buttons["search"]) }
+
+    /// The page of Delivery and returns, once its tag has run.
+    private func deliveryPage(_ app: XCUIApplication) -> XCUIElement { app.webViews.buttons["Size guide (pushState)"] }
+
     /// Three and a half minutes on Delivery and returns and back, for a build with a short visit
     /// (`KONTALA_SESSION_MINUTES=2`): the page's activity keeps the app's visit, so home is shown in the same session.
     /// Run alone, with `-only-testing:KontalaShopUITests/ShopVisitUITests/testThePageKeepsTheAppsVisit`.
-    func testThePageKeepsTheAppsVisit() throws {
+    func testThePageKeepsTheAppsVisit() {
         let app = XCUIApplication()
         app.launch()
         let shirt = app.staticTexts["Linen shirt"]
@@ -37,7 +44,7 @@ final class ShopVisitUITests: XCTestCase {
         delivery.tap()
         // The page's own route changes, every 50 seconds: its activity, which slides the app's visit.
         let routes = ["Size guide (pushState)", "Back to the top"]
-        XCTAssertTrue(app.webViews.buttons[routes[0]].waitForExistence(timeout: 15))
+        XCTAssertTrue(deliveryPage(app).waitForExistence(timeout: 15))
         for i in 0..<4 {
             sleep(50)
             app.webViews.buttons[routes[i % 2]].tap()
@@ -45,6 +52,51 @@ final class ShopVisitUITests: XCTestCase {
         sleep(10)
         home(app)
         sleep(5)
+    }
+
+    /// Delivery and returns, three and a half minutes in the app with a tap every 50 seconds, and Delivery and returns
+    /// again, for a build with a short visit (`KONTALA_SESSION_MINUTES=2`): the app's activity keeps the page's visit,
+    /// so the page loaded again continues it. Run alone, as `testThePageKeepsTheAppsVisit` is.
+    func testTheAppKeepsThePagesVisit() {
+        let app = XCUIApplication()
+        app.launch()
+        let shirt = app.staticTexts["Linen shirt"]
+        XCTAssertTrue(shirt.waitForExistence(timeout: 15))
+        shirt.tap()
+        let delivery = app.buttons["Delivery and returns"]
+        XCTAssertTrue(delivery.waitForExistence(timeout: 5))
+        delivery.tap()
+        XCTAssertTrue(deliveryPage(app).waitForExistence(timeout: 15))
+        sleep(5)
+        let add = app.buttons["Add to cart"]
+        back(app, until: add)
+        for _ in 0..<4 {
+            sleep(50)
+            add.tap()
+        }
+        sleep(10)
+        delivery.tap()
+        XCTAssertTrue(deliveryPage(app).waitForExistence(timeout: 15))
+        sleep(10)
+        home(app)
+        sleep(5)
+    }
+
+    /// Seven cold launches, each sent to the background once home is on show, which sends its screen's speed, the
+    /// first of them reading the property's configuration for the rest. Run alone, once with the demo key and once
+    /// with a key whose property lists no website (README.md), to see what sharing the web views' cookies costs a
+    /// launch.
+    func testColdLaunches() {
+        let app = XCUIApplication()
+        for _ in 0..<7 {
+            app.launch()
+            XCTAssertTrue(app.staticTexts["Linen shirt"].waitForExistence(timeout: 15))
+            sleep(2)
+            XCUIDevice.shared.press(.home)
+            sleep(3)
+            app.terminate()
+            sleep(1)
+        }
     }
 
     func testAVisitThroughTheShop() {
@@ -75,13 +127,19 @@ final class ShopVisitUITests: XCTestCase {
         drag(page, from: CGVector(dx: 0.92, dy: 0.8), to: CGVector(dx: 0.92, dy: 0.2))
         sleep(2)
         app.buttons["Delivery and returns"].tap()
-        sleep(8)
+        XCTAssertTrue(deliveryPage(app).waitForExistence(timeout: 15))
+        sleep(3)
         home(app)
 
         app.buttons["cart"].tap()
         app.buttons["Checkout"].tap()
         let name = app.textFields["Full name"]
         XCTAssertTrue(name.waitForExistence(timeout: 5))
+        // The same page, in SwiftUI's web view, from the checkout.
+        app.buttons["Delivery and returns"].tap()
+        XCTAssertTrue(deliveryPage(app).waitForExistence(timeout: 15))
+        sleep(3)
+        back(app, until: name)
         name.tap()
         name.typeText("Anna de Vries")
         app.textFields["Postcode"].tap()

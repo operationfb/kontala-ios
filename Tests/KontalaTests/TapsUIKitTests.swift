@@ -590,6 +590,42 @@
             }
         }
 
+        /// A SwiftUI form whose card field the app masks and whose newsletter switch it ignores, as the demo shop's
+        /// checkout masks its card number.
+        struct SwiftUIPayment: View {
+            @State var name = "Anna"
+            @State var card = "4242424242424242"
+            @State var news = true
+
+            var body: some View {
+                VStack(spacing: 40) {
+                    TextField("Full name", text: $name)
+                    TextField("Card number", text: $card).kontalaMask()
+                    Toggle("News", isOn: $news).kontalaIgnore()
+                    Button("Pay") {}.kontalaEvent(.purchase, id: "pay")
+                }.padding().frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+
+        func testASwiftUIFieldUnderAMaskOrAnIgnoreMarkIsNeverReadIntoItsForm() {
+            let host = UIHostingController(rootView: SwiftUIPayment())
+            _ = show(host)
+            spin(0.3)
+            let marks = allViews(host.view).compactMap { $0 as? TapMarkView }
+            guard let pay = marks.first(where: { if case .event = $0.kind { return true } else { return false } })
+            else { return XCTFail("the pay button's mark") }
+            XCTAssertEqual(1, allViews(host.view).compactMap { $0 as? UISwitch }.count, "SwiftUI's toggle is a switch")
+            tap(centre(pay))
+            guard let press = rec.presses.last else { return XCTFail("the pay button's tap") }
+            XCTAssertEqual(.purchase, press.target.declared)
+            XCTAssertEqual(
+                ["full_name": "Anna"], press.submits.obj("form")?.obj("values"),
+                "the masked card's number and the ignored switch are never read")
+            XCTAssertFalse(
+                press.submits.obj("form")?.list("fields")?.contains(.string("card")) ?? false,
+                "nor is what the masked field is")
+        }
+
         func testASwiftUIFieldIsNamedByItsMarkOrPlaceholderNeverByWhatSwiftUIHandsIt() throws {
             guard #available(iOS 14, *) else { throw XCTSkip("SwiftUI's identifiers are iOS 14's") }
             let host = UIHostingController(rootView: SwiftUIFields())
