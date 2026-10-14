@@ -16,6 +16,10 @@
             let rec = Recorded()
             let window = UIWindow(frame: UIScreen.main.bounds)
             let watcher = ScreenWatcher(signals: rec, window: { window })
+            // What earlier tests' windows and the keyboard's own view controllers still tell the hooks, as they go,
+            // is told before this watcher listens: the hooks tell whichever watcher is current, and a stray one read
+            // the launch's screen before its view had loaded.
+            spin(0.5)
             ScreenWatcher.current = watcher
             UIKitHooks.installed
             let nav = UINavigationController(rootViewController: ShopViewController())

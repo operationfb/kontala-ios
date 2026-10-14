@@ -49,6 +49,10 @@
     /// navigation at the same moment, as an app that handles its keyboard's key and lets go of the field does. A
     /// submit the app handles while the field keeps editing is seen by neither, so these rows are a lower bound.
     ///
+    /// Every touch is handed to the measures' readers too, where the app captures them, with one chain of views and one
+    /// resolution between them (`Pointer`): friction's at its start, its moves and its end, and again once UIKit has
+    /// delivered the end (`dispatched`), swipes' at its start and its end, and scroll depth's at its start.
+    ///
     /// Everything here runs on the main thread, and what it reads it posts to the core as a [Press].
     final class TapReader {
         /// The reader the event hook reports to, on the main thread, let go of only once the write is over, as
@@ -90,6 +94,15 @@
         private var lastInput: TimeInterval = -.greatestFiniteMagnitude
         private weak var editing: UIView?
         private var observers: [NSObjectProtocol] = []
+
+        /// The measures' readers of the same touches, where the app captures friction and scrolling.
+        var friction: FrictionReader?
+        var swipes: SwipeReader?
+        var scroll: ScrollWatcher?
+
+        /// Whether the event being delivered ended the touch, and the tap friction read it as.
+        private var ending = false
+        private var endedTap: FrictionReader.Tap?
 
         init(
             signals: TapSignals, switches: Switches, captureText: Bool,
@@ -225,7 +238,7 @@
         }
 
         /// Whether a window is the keyboard's, whose keys are no touch of the app's.
-        private static func keyboard(_ w: UIWindow) -> Bool {
+        static func keyboard(_ w: UIWindow) -> Bool {
             let n = NSStringFromClass(type(of: w))
             return n.contains("Keyboard") || n.contains("TextEffects")
         }
@@ -233,10 +246,17 @@
         func began(_ s: TouchSample) {
             lastInput = max(lastInput, s.time)
             down = nil
-            guard switches.tapsOn, s.primary, let view = s.view else { return }
-            let chain = TapResolver.chain(to: view)
-            guard let r = TapResolver.resolve(chain, at: s.point, captureText: captureText).target, !r.target.disabled
-            else { return }
+            guard let view = s.view else {
+                friction?.cancel()
+                swipes?.cancel()
+                return
+            }
+            // One chain and one resolution for every reader of the touch.
+            let p = Pointer(s, chain: TapResolver.chain(to: view), captureText: captureText)
+            friction?.down(p)
+            swipes?.down(p)
+            scroll?.down(p)
+            guard switches.tapsOn, s.primary, let r = p.resolution.target, !r.target.disabled else { return }
             let control = r.control
             let bounds = control.convert(control.bounds, to: nil)
             let scrolls = (0..<r.index).contains { i in
@@ -254,11 +274,15 @@
         }
 
         func moved(_ s: TouchSample) {
+            friction?.moved(s)
             if let d = down, !d.within(s.point) { down = nil }
         }
 
         func ended(_ s: TouchSample) {
             lastInput = max(lastInput, s.time)
+            endedTap = friction?.up(s)
+            ending = true
+            swipes?.up(s)
             guard let d = down else { return }
             down = nil
             if !d.within(s.point) { return }
@@ -270,6 +294,18 @@
         func cancel() {
             down = nil
             touch = nil
+            friction?.cancel()
+            swipes?.cancel()
+            ending = true
+        }
+
+        /// UIKit delivered an event: where it ended a touch, friction hears that the tap's actions have run.
+        func dispatched() {
+            guard ending else { return }
+            ending = false
+            let tap = endedTap
+            endedTap = nil
+            friction?.dispatched(tap)
         }
 
         /// Who a press names, a login's user and organisation, and from contract 2 what a submit button sends: the
@@ -439,8 +475,10 @@
         // Calls what it replaced, which after the exchange is its own selector; `dynamic` for the reason the view
         // controllers' hooks are.
         @objc(kontala_sendEvent:) fileprivate dynamic func kontalaSendEvent(_ event: UIEvent) {
-            TapReader.current?.read(event)
+            let reader = TapReader.current
+            reader?.read(event)
             kontalaSendEvent(event)
+            reader?.dispatched()
         }
     }
 #endif

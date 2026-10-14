@@ -90,6 +90,9 @@
         /// Shows [root] in the window, its first screen read at the next frame.
         @discardableResult
         private func launch(_ root: UIViewController, screen: UIViewController) -> UIViewController {
+            // Its view loaded first, as an app's `viewDidLoad` comes before the hook: a window lays out its root at a
+            // moment of UIKit's own, which the screen's first reading can otherwise come before.
+            screen.loadViewIfNeeded()
             watcher.loaded(screen)
             window.rootViewController = root
             window.makeKeyAndVisible()
@@ -119,6 +122,54 @@
                 watcher.didAppear(back)
             }
             spin()
+        }
+
+        func testAScreenIsMeasuredFromItsNavigationsFirstFrameAndNumberedWhereItsNameChanges() {
+            var flying = false
+            var told: [String] = []
+            let w = ScreenWatcher(
+                signals: rec, window: { [weak self] in self?.window },
+                nextFrame: { DispatchQueue.main.async(execute: $0) }, inFlight: { _ in flying })
+            w.onFirstFrame = { told.append("framed") }
+            w.onScreen = { start, _, vc, renamed in
+                told.append("\(type(of: vc)) \(renamed ? "renamed" : "same")\(start == nil ? " unbegun" : "")")
+            }
+            w.onSettled = { told.append("settled") }
+            let shop = ShopViewController()
+            let nav = UINavigationController(rootViewController: shop)
+            shop.loadViewIfNeeded()
+            w.loaded(shop)
+            window.rootViewController = nav
+            window.makeKeyAndVisible()
+            w.didAppear(shop)
+            spin()
+            XCTAssertEqual(["framed", "ShopViewController renamed", "settled"], told)
+
+            // A child loading its view inside the screen on show begins no screen.
+            told.removeAll()
+            let child = FrameViewController()
+            shop.addChild(child)
+            child.view.frame = CGRect(x: 0, y: 0, width: 100, height: 100)
+            shop.view.addSubview(child.view)
+            child.didMove(toParent: shop)
+            w.loaded(child)
+            spin()
+            XCTAssertEqual(["framed", "ShopViewController same", "settled"], told)
+
+            // A transition's first frame is told before the transition ends, and its screen after it.
+            told.removeAll()
+            flying = true
+            let cart = CartViewController()
+            w.loaded(cart)
+            cart.loadViewIfNeeded()
+            nav.pushViewController(cart, animated: false)
+            w.willAppear(cart, arriving: true)
+            spin()
+            XCTAssertEqual(["framed"], told)
+            flying = false
+            w.didAppear(cart)
+            spin()
+            XCTAssertEqual(["framed", "CartViewController renamed", "settled"], told)
         }
 
         func testTheFirstScreenIsReadAtTheFrameAfterItAppearsAndTheFirstFrameIsToldAfterIt() {
@@ -196,8 +247,13 @@
         }
 
         func testASwiftUIScreensMarkerDeclaresItsHostingControllerAndAChangeAmendsTheScreenOnShow() {
+            // Read at a real frame, as the app's watcher reads: a navigation controller can put a pushed screen's
+            // view in the window only as the frame is committed, and SwiftUI's marker declares as it arrives there,
+            // which a read at the main queue's next turn can come before.
+            watcher = ScreenWatcher(signals: rec, window: { [weak self] in self?.window }, inFlight: { _ in false })
             let nav = UINavigationController(rootViewController: ShopViewController())
             launch(nav, screen: nav.topViewController!)
+            spin(0.2)
             ScreenWatcher.current = watcher
             defer { ScreenWatcher.current = nil }
             rec.calls.removeAll()

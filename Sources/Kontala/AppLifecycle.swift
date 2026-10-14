@@ -16,11 +16,19 @@
         private var observers: [NSObjectProtocol] = []
         private var state: AppState
 
+        /// Told on the main thread just before the core hears the app was hidden, while what it showed is still there
+        /// to read: a scroll view's last reading, what the screen showed.
+        var beforeHide: [() -> Void] = []
+
+        /// Whether the app is on show, for the thread that crashes.
+        let visible: Shared<Bool>
+
         init(running: Kontala.Running, platform: ApplePlatform, app: UIApplication, state: AppState) {
             self.running = running
             self.platform = platform
             self.app = app
             self.state = state
+            visible = Shared(state != .hidden)
         }
 
         /// Starts listening, on the main thread. The launch's first frame is the screen watcher's to tell, once it has
@@ -45,8 +53,10 @@
         private func became(_ next: AppState) {
             if next == state { return }
             state = next
+            visible.value = next != .hidden
             platform.windowChanged()
             if next == .hidden {
+                for f in beforeHide { f() }
                 // Time until the core has heard: it asks for its own for the flush as it does.
                 let task = BackgroundTask(app, "kontala.hide")
                 running.post { core in

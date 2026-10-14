@@ -1,0 +1,556 @@
+{
+  "_comment": "iOS's measures in one visit: a swipe across a carousel, scroll depth, a rage tap on a control that answers nothing, a dead tap and a disabled one, each screen's speed and time, a return to the app, and an exception nothing caught, written as the process ends and sent by its next launch.",
+  "capture": {
+    "data_layer": "discover",
+    "clicks": true,
+    "scroll": true,
+    "friction": true
+  },
+  "refused": [],
+  "requests": [
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1"
+        }
+      },
+      "events": [
+        {
+          "id": "event-1",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:02.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/catalogue",
+            "title": "Catalogue",
+            "navigation": "launch"
+          }
+        },
+        {
+          "id": "event-2",
+          "event": "app_installed",
+          "timestamp": "2026-10-05T09:15:02.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "properties": {
+            "version": "3.2.0",
+            "build": "412"
+          },
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-3",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:02.000002Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "properties": {
+            "cold": true
+          },
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-4",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:03.500000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "element": {
+            "role": "button",
+            "text": "Free returns",
+            "class": "UIButton"
+          },
+          "path": "CatalogueScreen > UIScrollView > UIButton",
+          "region": "main",
+          "input": "touch",
+          "x": 116.0,
+          "y": 162.0,
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-5",
+          "event": "rage_click",
+          "timestamp": "2026-10-05T09:15:04.700000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "rage": {
+            "clicks": 3,
+            "duration_ms": 200,
+            "dead": true
+          },
+          "element": {
+            "role": "button",
+            "text": "Free returns",
+            "class": "UIButton"
+          },
+          "path": "CatalogueScreen > UIScrollView > UIButton",
+          "region": "main",
+          "x": 116.0,
+          "y": 162.0,
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-6",
+          "event": "dead_click",
+          "timestamp": "2026-10-05T09:15:10.500000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "dead": {
+            "outcome": "none",
+            "wait_ms": 1000
+          },
+          "element": {
+            "role": "button",
+            "text": "Free returns",
+            "class": "UIButton"
+          },
+          "path": "CatalogueScreen > UIScrollView > UIButton",
+          "region": "main",
+          "x": 116.0,
+          "y": 162.0,
+          "input": "touch",
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-7",
+          "event": "dead_click",
+          "timestamp": "2026-10-05T09:15:11.800000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "dead": {
+            "outcome": "disabled",
+            "wait_ms": 1000
+          },
+          "element": {
+            "role": "button",
+            "text": "XL sold out",
+            "class": "UIButton"
+          },
+          "path": "CatalogueScreen > UIScrollView > UIButton",
+          "region": "main",
+          "x": 116.0,
+          "y": 222.0,
+          "input": "touch",
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-8",
+          "event": "swipe",
+          "timestamp": "2026-10-05T09:15:12.800000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "swipe": {
+            "direction": "left",
+            "effect": "scrolled",
+            "distance": 300,
+            "duration_ms": 450
+          },
+          "element": {
+            "role": "other",
+            "class": "ShopCarousel"
+          },
+          "path": "CatalogueScreen > UIScrollView > ShopCarousel",
+          "region": "main",
+          "x": 350.0,
+          "y": 360.0,
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-9",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:13.800000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "engagement": {
+            "trigger": "view",
+            "visible_ms": 11800
+          },
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-10",
+          "event": "page_speed",
+          "timestamp": "2026-10-05T09:15:13.800001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "speed": {
+            "trigger": "view",
+            "nav": "launch",
+            "inp_ms": 0,
+            "inp": {
+              "type": "pointer",
+              "processing_ms": 0,
+              "presentation_ms": 0,
+              "role": "button",
+              "path": "CatalogueScreen > UIScrollView > UIButton"
+            },
+            "interactions": 4,
+            "supported": [
+              "inp"
+            ]
+          },
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-11",
+          "event": "scroll_depth",
+          "timestamp": "2026-10-05T09:15:13.800002Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-1",
+          "scroll": {
+            "trigger": "view",
+            "depth_px": 1174,
+            "height_px": 3900,
+            "viewport_px": 874,
+            "root": "element"
+          },
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        },
+        {
+          "id": "event-12",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:13.800003Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/still",
+            "title": "Still",
+            "navigation": "push",
+            "from": "/catalogue"
+          }
+        },
+        {
+          "id": "event-13",
+          "event": "app_backgrounded",
+          "timestamp": "2026-10-05T09:15:15.300000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-12",
+          "properties": {
+            "foreground_ms": 13300
+          },
+          "context": {
+            "app": {
+              "screen": "/still"
+            }
+          }
+        },
+        {
+          "id": "event-14",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:15.300001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-12",
+          "engagement": {
+            "trigger": "hide",
+            "visible_ms": 1500
+          },
+          "context": {
+            "app": {
+              "screen": "/still"
+            }
+          }
+        },
+        {
+          "id": "event-15",
+          "event": "page_speed",
+          "timestamp": "2026-10-05T09:15:15.300002Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-12",
+          "speed": {
+            "trigger": "hide",
+            "fcp_ms": 0,
+            "soft": true,
+            "interactions": 0,
+            "inv_ms": 2000,
+            "supported": [
+              "fcp",
+              "inp",
+              "soft",
+              "inv"
+            ]
+          },
+          "context": {
+            "app": {
+              "screen": "/still"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:15.300000Z"
+    },
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1"
+        }
+      },
+      "events": [
+        {
+          "id": "event-16",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:20.300000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-12",
+          "properties": {
+            "cold": false,
+            "away_ms": 5000
+          },
+          "context": {
+            "app": {
+              "screen": "/still"
+            }
+          }
+        },
+        {
+          "id": "event-17",
+          "event": "page_restore",
+          "timestamp": "2026-10-05T09:15:20.300001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-12",
+          "restore": {
+            "away_ms": 5000,
+            "restores": 1
+          },
+          "context": {
+            "app": {
+              "screen": "/still"
+            }
+          }
+        },
+        {
+          "id": "event-18",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:21.300000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-12",
+          "engagement": {
+            "trigger": "view",
+            "visible_ms": 2500
+          },
+          "context": {
+            "app": {
+              "screen": "/still"
+            }
+          }
+        },
+        {
+          "id": "event-19",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:21.300001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "screen": {
+            "name": "/catalogue",
+            "title": "Catalogue",
+            "navigation": "pop",
+            "from": "/still"
+          }
+        },
+        {
+          "id": "event-20",
+          "event": "click",
+          "timestamp": "2026-10-05T09:15:22.800000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-19",
+          "element": {
+            "role": "button",
+            "text": "Pay",
+            "class": "UIButton"
+          },
+          "path": "CatalogueScreen > UIScrollView > UIButton",
+          "region": "main",
+          "input": "touch",
+          "x": 116.0,
+          "y": 422.0,
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:22.800000Z"
+    },
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1"
+        }
+      },
+      "events": [
+        {
+          "id": "event-21",
+          "event": "js_error",
+          "timestamp": "2026-10-05T09:15:22.800001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "view": "event-19",
+          "error": {
+            "kind": "error",
+            "name": "NSInternalInconsistencyException",
+            "message": "Payment <n> failed for <email>",
+            "since_click_ms": 0
+          },
+          "element": {
+            "role": "button",
+            "text": "Pay",
+            "class": "UIButton"
+          },
+          "path": "CatalogueScreen > UIScrollView > UIButton",
+          "region": "main",
+          "context": {
+            "app": {
+              "screen": "/catalogue"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:23.350000Z"
+    }
+  ]
+}

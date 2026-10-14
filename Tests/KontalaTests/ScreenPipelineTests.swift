@@ -39,6 +39,7 @@
             Kontala.handle(url: URL(string: "kontalashop://shop/?utm_source=push&utm_campaign=autumn")!)
             let shop = ShopViewController()
             let nav = UINavigationController(rootViewController: shop)
+            shop.loadViewIfNeeded()
             watcher.loaded(shop)
             window.rootViewController = nav
             window.makeKeyAndVisible()
@@ -77,8 +78,11 @@
             XCTAssertEqual("cart", views[1].str("page_type"), "declared in viewDidLoad, on its own screen")
             XCTAssertEqual(["items": 2] as JSONObject, views[1].obj("properties"))
             XCTAssertEqual(
-                ["page_view", "app_opened", "view_time", "page_view", "view_time", "page_view"],
-                s.collector.events.map { $0.str("event")! }, "each view's time is sent as it ends, under it")
+                [
+                    "page_view", "app_opened", "view_time", "page_speed", "page_view", "view_time", "page_speed",
+                    "page_view",
+                ],
+                s.collector.events.map { $0.str("event")! }, "each view's time and speed are sent as it ends, under it")
             window.isHidden = true
         }
     }

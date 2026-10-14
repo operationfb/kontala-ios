@@ -101,6 +101,59 @@
             return .none
         }
 
+        // What friction and swipes read of what is no control.
+
+        /// What a press that acted on no control was on, at [point] in the window: the nearest image view, else the
+        /// view pressed, described without its text; nil under `kontalaIgnore`, its SwiftUI mark's or a view's, or in
+        /// a web view, whose page reads its own.
+        static func describeHit(_ chain: [UIView], at point: CGPoint? = nil) -> TapTarget? {
+            guard let leaf = chain.last, !chain.contains(where: { $0 is WKWebView || $0.kontalaIgnore }) else {
+                return nil
+            }
+            let marks = point.flatMap { p in leaf.window.map { TapMarks.at(p, in: $0) } } ?? []
+            if marks.contains(where: { $0.kind == .ignore }) { return nil }
+            let marked = Marked(marks)
+            let last = chain.count - 1
+            for i in stride(from: last, through: max(0, last - 39), by: -1) where chain[i] is UIImageView {
+                return target(chain, i, "image", false, false, marked, field: nil).target
+            }
+            return target(chain, last, "other", false, false, marked, field: nil).target
+        }
+
+        /// The disabled control under [point] in [window], which UIKit's hit test passes over (measured on iOS 18.6):
+        /// what a press that nothing enabled took was on, as the Android SDK's disabled control takes the press.
+        static func disabledAt(_ point: CGPoint, in window: UIWindow, captureText: Bool) -> ResolvedTarget? {
+            var left = 3000
+            func find(_ v: UIView, _ p: CGPoint) -> UIView? {
+                left -= 1
+                if left < 0 || v.isHidden || v.alpha <= 0.01 || !v.isUserInteractionEnabled { return nil }
+                if v is WKWebView || !v.point(inside: p, with: nil) { return nil }
+                for sub in v.subviews.reversed() {
+                    if let found = find(sub, v.convert(p, to: sub)) { return found }
+                }
+                if let c = v as? UIControl, !c.isEnabled { return c }
+                return nil
+            }
+            guard let control = find(window, point) else { return nil }
+            guard let r = resolve(chain(to: control), at: point, captureText: captureText).target, r.target.disabled
+            else { return nil }
+            return r
+        }
+
+        /// The view at [index] of [chain] described as [role], without its text: what a swipe was on.
+        static func describe(_ chain: [UIView], _ index: Int, role: String) -> TapTarget {
+            target(chain, index, role, false, false, Marked([]), field: nil).target
+        }
+
+        /// Whether a press is in a field or in text that can be selected, which is never part of a rage tap: a triple
+        /// tap selects a paragraph.
+        static func rageExcluded(_ chain: [UIView]) -> Bool {
+            chain.contains { isField($0) || (($0 as? UITextView)?.isSelectable ?? false) }
+        }
+
+        /// Whether a finger on [v] drags it rather than swiping: a field, a slider or a switch.
+        static func dragged(_ v: UIView) -> Bool { isField(v) || v is UISlider || v is UISwitch }
+
         /// What the SwiftUI marks under a press say: ignored is told before any of this.
         struct Marked {
             let masked: Bool

@@ -128,6 +128,22 @@
             os_log("%{public}@", log: logger, type: .info, line)
         }
 
+        /// What the app shows, as friction's fingerprint reads it, where friction is captured; set and read on the
+        /// main thread.
+        var fingerprinter: (() -> Int64?)?
+
+        /// Times the frame after the app says its screen is fully displayed, where speed is measured; set and read on
+        /// the main thread.
+        var readier: (() -> Void)?
+
+        func fingerprint(_ done: @escaping (Int64?) -> Void) {
+            DispatchQueue.main.async { [weak self] in done(self?.fingerprinter?()) }
+        }
+
+        func screenReady() {
+            DispatchQueue.main.async { [weak self] in self?.readier?() }
+        }
+
         // The cookie store every web view of the app shares, WebKit's default website data store's: asynchronous,
         // and asked on the main thread alone. Its first use starts WebKit, so it is never asked as the app launches,
         // only once the core has websites to share and a grant to share them under.

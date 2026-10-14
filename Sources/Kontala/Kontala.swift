@@ -6,6 +6,7 @@
 
     extension Kontala {
         private static var lifecycle: AppLifecycle?
+        private static var measures: MeasureReaders?
 
         /// Starts capturing, as the app starts: in `App.init` or `application(_:didFinishLaunchingWithOptions:)`, on
         /// the main thread. [writeKey] is the property's public write key, and [endpoint] the Events API URL Kontala
@@ -37,6 +38,10 @@
                 onStop: {
                     // The observers and the hooks' watcher are the main thread's to take away.
                     DispatchQueue.main.async {
+                        measures?.stop()
+                        measures = nil
+                        platform.fingerprinter = nil
+                        platform.readier = nil
                         lifecycle?.detach()
                         lifecycle = nil
                         ScreenWatcher.current = nil
@@ -56,11 +61,17 @@
             watcher.warn = r.warn
             ScreenWatcher.current = watcher
             UIKitHooks.installed
-            if options.taps {
+            let m = MeasureReaders(r, options: options, watcher: watcher, lifecycle: l, platform: platform)
+            measures = m
+            // Every touch is read where taps, friction or scrolling are captured.
+            if options.taps || options.friction || options.scroll {
                 let taps = TapReader(
                     signals: CoreTapSignals(r), switches: r.core.switches, captureText: options.captureText,
                     navigationAt: { [weak watcher] in watcher?.begunAt ?? -.greatestFiniteMagnitude },
                     active: { app.applicationState == .active })
+                taps.friction = m.friction
+                taps.swipes = m.swipes
+                taps.scroll = m.scroll
                 TapReader.current = taps
                 taps.observe()
                 TapHooks.installed

@@ -135,6 +135,9 @@
 
         private func launch(_ home: ShopHomeScreen) {
             nav = UINavigationController(rootViewController: home)
+            // Its view loaded first, as an app's `viewDidLoad` comes before the hook: a window lays out its root at a
+            // moment of UIKit's own, which the screen's first reading can otherwise come before, with no title.
+            home.loadViewIfNeeded()
             watcher.loaded(home)
             window.rootViewController = nav
             window.makeKeyAndVisible()

@@ -100,7 +100,24 @@
         /// Writes a line of the SDK's debug log.
         var warn: (String) -> Void = { _ in }
 
+        /// Told at a navigation's first frame, before its screen is known, which a transition can hold back.
+        var onFirstFrame: () -> Void = {}
+
+        /// Told of each screen just before the core is: when its navigation began, where one did, when that
+        /// navigation's first frame was drawn, in seconds of the system's uptime, its view controller, and whether it
+        /// is named otherwise than the screen told before it, which a new screen is.
+        var onScreen:
+            (_ start: TimeInterval?, _ framedAt: TimeInterval, _ vc: UIViewController, _ renamed: Bool) -> Void =
+                { _, _, _, _ in }
+
+        /// Told as a navigation's screen is read, whether or not it is another screen.
+        var onSettled: () -> Void = {}
+
         private var begun = false
+        /// When the navigation in progress drew its first frame.
+        private var framedAt: TimeInterval?
+        /// The name of the screen told last, which a screen named otherwise follows.
+        private var toldName: String??
         /// When the last navigation began, in seconds of the system's uptime, the clock UIKit stamps its events with: a
         /// field that ends its editing then went with its screen.
         private(set) var begunAt: TimeInterval = -.greatestFiniteMagnitude
@@ -112,17 +129,22 @@
         private var lastRaw: String?
         private let tabs = NSMapTable<UITabBarController, UIViewController>.weakToWeakObjects()
 
+        /// The system's uptime, in seconds, unless a test keeps a clock of its own.
+        private let clock: () -> TimeInterval
+
         /// [inFlight] says whether a view controller is in a transition: UIKit's own coordinator, unless a test with
         /// no application, where UIKit never ends some it starts, says otherwise.
         init(
             signals: ScreenSignals, window: @escaping () -> UIWindow?,
             nextFrame: @escaping (@escaping () -> Void) -> Void = NextFrame.after,
-            inFlight: @escaping (UIViewController) -> Bool = { $0.transitionCoordinator != nil }
+            inFlight: @escaping (UIViewController) -> Bool = { $0.transitionCoordinator != nil },
+            clock: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }
         ) {
             self.signals = signals
             self.window = window
             self.nextFrame = nextFrame
             self.inFlight = inFlight
+            self.clock = clock
         }
 
         // What the view controllers' own methods say, with what UIKit says of the transition each is in.
@@ -182,7 +204,7 @@
         private func begin(_ k: NavigationKind) {
             if begun { return }
             begun = true
-            begunAt = ProcessInfo.processInfo.systemUptime
+            begunAt = clock()
             kind = k
             signals.begin(k)
             // A navigation that shows nothing new, a view loaded and never shown, is settled at the next frame.
@@ -198,6 +220,12 @@
 
         private func dispatch() {
             scheduled = false
+            let now = clock()
+            if begun && framedAt == nil {
+                // The navigation's first frame, which a transition in flight is drawn from.
+                framedAt = now
+                onFirstFrame()
+            }
             guard let root = window()?.rootViewController else { return }
             let chain = ScreenKinds.front(root)
             if chain.contains(where: inFlight) {
@@ -211,10 +239,16 @@
                 if begun || !same {
                     lastRoute = c.route
                     lastRaw = c.raw
+                    let name = c.declaration?.name ?? c.raw
+                    let renamed = toldName.map { $0 != name } ?? true
+                    toldName = .some(name)
+                    onScreen(begun ? begunAt : nil, framedAt ?? now, c.route, renamed)
                     signals.shown(c.raw, kind ?? .push, c.declaration, RouteRef(c.route), c.title)
                 }
             }
             begun = false
+            framedAt = nil
+            onSettled()
             kind = nil
             if !framed {
                 framed = true

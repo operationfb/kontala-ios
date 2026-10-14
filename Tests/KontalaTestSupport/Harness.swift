@@ -202,6 +202,12 @@ package final class FakePlatform: Platform {
     /// Whether a web view is on show, as the platform would find one in the screen in front.
     package var webViewOnShow = false
 
+    /// What the app shows, as the platform's fingerprint reads it, where a test gives one; none reads as nil.
+    package var fingerprinter: (() -> Int64?)?
+
+    /// Told each time the app says its screen is fully displayed.
+    package var readied: () -> Void = {}
+
     /// The background tasks begun and ended, by their tokens.
     package var tasksBegun = 0
     package var tasksEnded: [Int] = []
@@ -244,6 +250,10 @@ package final class FakePlatform: Platform {
     }
 
     package func webViewShown(_ frames: Int, _ done: @escaping (Bool) -> Void) { done(webViewOnShow) }
+
+    package func fingerprint(_ done: @escaping (Int64?) -> Void) { done(fingerprinter?()) }
+
+    package func screenReady() { readied() }
 }
 
 /// The cookie store the app's web views share: the cookies each origin's pages see.

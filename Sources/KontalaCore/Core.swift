@@ -102,10 +102,34 @@ package final class Core: PluginContext, WebSharingHost {
     package let lifecycle = LifecyclePlugin()
     package let engagement = EngagementPlugin()
     package let taps = TapsPlugin()
+    package let restores = RestoresPlugin()
+    package let frictionTaps = FrictionTapsPlugin()
+    package let speed = SpeedPlugin()
+    package let scroll = ScrollPlugin()
+    package let swipes = SwipesPlugin()
 
     /// What the main thread reads before it reads a tap, a scroll or friction off the app's views.
     /// Made as the core is, so the main thread reads it from its first tap: a lazy one could be made twice.
     package let switches: Switches
+
+    /// What a crash's row is stamped with, for the thread that crashes; nil while no such row would be sent.
+    package var crashContext: CrashContext? {
+        get {
+            crashLock.lock()
+            defer { crashLock.unlock() }
+            return publishedCrash
+        }
+        set {
+            crashLock.lock()
+            publishedCrash = newValue
+            crashLock.unlock()
+        }
+    }
+
+    private let crashLock = NSLock()
+    private var publishedCrash: CrashContext?
+    /// The directory a crash's row is written in, made once it is known.
+    private var crashDir: URL?
 
     private var plugins: [KontalaPlugin] = []
     private var viewListeners: [(CapturedEvent) -> Void] = []
@@ -172,6 +196,11 @@ package final class Core: PluginContext, WebSharingHost {
         if options.taps { bound.append(taps) }
         if options.lifecycle { bound.append(lifecycle) }
         if options.screens { bound.append(engagement) }
+        if options.friction { bound.append(restores) }
+        if options.friction { bound.append(frictionTaps) }
+        if options.friction && options.screens { bound.append(speed) }
+        if options.scroll { bound.append(scroll) }
+        if options.scroll { bound.append(swipes) }
         for p in bound {
             p.bind(self)
             plugins.append(p)
@@ -284,6 +313,7 @@ package final class Core: PluginContext, WebSharingHost {
         switches.taps = options.taps && s.clicks
         switches.scroll = options.scroll && s.contract >= 2 ? s.scroll : nil
         switches.friction = options.friction && s.contract >= 2 ? s.friction : nil
+        if switches.friction == nil { crashContext = nil }
     }
 
     package var currentView: CapturedEvent? { view }
@@ -571,7 +601,36 @@ package final class Core: PluginContext, WebSharingHost {
             }
             if !beforeSend(e) { continue }
             q.add(e)
+            if state == .granted { publishCrash(e) }
         }
+    }
+
+    /// What a crash's row would be stamped with now: the view in force, and the identity and context a granted event
+    /// was released with, while the property captures friction and the device may be written to.
+    private func publishCrash(_ released: CapturedEvent) {
+        guard let rules = switches.frictionRules, let s = store, s.writable, let dir = s.directory(), let v = view
+        else {
+            crashContext = nil
+            return
+        }
+        if crashDir != dir {
+            // Made now, so the crashing thread only appends.
+            try? FileManager.default.createDirectory(
+                at: dir.appendingPathComponent(CrashContext.file).deletingLastPathComponent(),
+                withIntermediateDirectories: true)
+            crashDir = dir
+        }
+        crashContext = CrashContext(
+            dir: dir,
+            view: v.id,
+            session: released.session,
+            device: released.device,
+            user: principal.user,
+            org: principal.org,
+            context: released.context.withScreen(screenName),
+            rules: rules,
+            now: { [clock] in clock.nowMicros() },
+            after: released.atMicros)
     }
 
     private func beforeSend(_ e: CapturedEvent) -> Bool {
@@ -780,6 +839,54 @@ package final class Core: PluginContext, WebSharingHost {
         webViews.screenChanged()
     }
 
+    /// A tap as friction reads it: on a control or not, enabled or not.
+    package func pressed(_ press: FrictionPress) {
+        if stopped || !options.friction { return }
+        frictionTaps.pressed(press)
+    }
+
+    /// Something on show answered whatever was tapped: a field began its editing, the keyboard showed, a scroll.
+    package func answered() {
+        if stopped || !options.friction { return }
+        frictionTaps.answered()
+    }
+
+    /// Another window of the app's took the key from the screen's, or gave it back.
+    package func windowFocus(_ focused: Bool) {
+        if stopped || !options.friction { return }
+        frictionTaps.windowFocus(focused)
+    }
+
+    /// What the app showed as it went to the background, which the platform read just before it said so.
+    package func hiding(_ print: Int64?) {
+        if stopped || !options.friction { return }
+        frictionTaps.hiding(print)
+    }
+
+    /// A reading of the screen's scroll view.
+    package func scrolled(_ reading: Reading) {
+        if stopped || !options.scroll { return }
+        scroll.read(reading)
+    }
+
+    /// A swipe the platform read off a finger's touches.
+    package func swiped(_ swipe: Swipe) {
+        if stopped || !options.scroll { return }
+        swipes.swiped(swipe)
+    }
+
+    /// The platform showed its screen numbered [screen], whose view the hub is about to open.
+    package func screenNumbered(_ screen: Int) {
+        if stopped { return }
+        speed.shown(screen)
+    }
+
+    /// What the platform measured of a screen's speed.
+    package func measured(_ signal: SpeedSignal) {
+        if stopped || !options.friction || !options.screens { return }
+        speed.measured(signal)
+    }
+
     /// iOS gives an app no time once it is hidden, so the flush holds a background task while it is in flight.
     private func backgroundFlush() {
         guard let s = sender else { return }
@@ -928,6 +1035,7 @@ package final class Core: PluginContext, WebSharingHost {
         switches.taps = false
         switches.scroll = nil
         switches.friction = nil
+        crashContext = nil
         for p in plugins { p.unbind() }
         webViews.stop()
         gate.dispose()
