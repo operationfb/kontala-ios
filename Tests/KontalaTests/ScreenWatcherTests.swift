@@ -73,6 +73,11 @@
         private var window: UIWindow!
         private var rec: Recorded!
         private var watcher: ScreenWatcher!
+        /// The navigations the watcher has settled, which `push` and `pop` wait for rather than for a time: a SwiftUI
+        /// screen not named yet is read again at each of the next few frames (`ScreenWatcher.namingFrames`), each a
+        /// turn of the main queue here, and a wait of fixed length ended before the last of them when the main thread
+        /// was busy, as the pre-push gate's parallel run made it on 2026-10-15.
+        private var settled = 0
 
         override func setUp() {
             window = UIWindow(frame: UIScreen.main.bounds)
@@ -80,6 +85,8 @@
             watcher = ScreenWatcher(
                 signals: rec, window: { [weak self] in self?.window },
                 nextFrame: { DispatchQueue.main.async(execute: $0) }, inFlight: { _ in false })
+            settled = 0
+            watcher.onSettled = { [weak self] in self?.settled += 1 }
         }
 
         override func tearDown() {
@@ -103,17 +110,29 @@
             return root
         }
 
+        /// Spins until the watcher has settled a navigation since it had settled [before], for ten seconds at most, and
+        /// then as `spin` does.
+        private func settle(since before: Int) {
+            let most = Date().addingTimeInterval(10)
+            while settled == before && Date() < most {
+                RunLoop.main.run(until: Date().addingTimeInterval(0.01))
+            }
+            spin()
+        }
+
         private func push(_ nav: UINavigationController, _ vc: UIViewController) {
+            let before = settled
             watcher.loaded(vc)
             vc.loadViewIfNeeded()
             nav.pushViewController(vc, animated: false)
             watcher.willAppear(vc, arriving: true)
             watcher.didAppear(vc)
-            spin()
+            settle(since: before)
         }
 
         private func pop(_ nav: UINavigationController) {
             guard let top = nav.topViewController else { return }
+            let before = settled
             watcher.willDisappear(top, leaving: true)
             nav.popViewController(animated: false)
             watcher.didDisappear(top, leaving: true)
@@ -121,7 +140,7 @@
                 watcher.willAppear(back, arriving: false)
                 watcher.didAppear(back)
             }
-            spin()
+            settle(since: before)
         }
 
         func testAScreenIsMeasuredFromItsNavigationsFirstFrameAndNumberedWhereItsNameChanges() {
