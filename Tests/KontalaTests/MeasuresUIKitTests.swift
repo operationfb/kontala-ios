@@ -499,6 +499,8 @@
         }
 
         func testAnExceptionIsWrittenWithTheTapBeforeItAndTheHandlerItWrapsRunsAfter() throws {
+            // From 0 whatever ran before, so the test holds when run again in one process (`-test-iterations`).
+            Chained.calls = 0
             let dir = temporaryDirectory()
             defer { try? FileManager.default.removeItem(atPath: dir) }
             let store = FileStore(baseDir: dir)

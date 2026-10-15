@@ -67,7 +67,8 @@
     /// code in its `viewDidLoad` can declare a page type, which then rides on the screen it opens; one shown again, as
     /// a pop or a tab switch shows one; or one popped or dismissed. Its screen is read at the frame after a view
     /// controller appeared or one left, once no transition is in flight, and told as a navigation's screen, or as a
-    /// change where nothing began one.
+    /// change where nothing began one. A SwiftUI screen not named yet is read again for a few frames first, since
+    /// SwiftUI names one as it renders it in the window.
     ///
     /// The screen is the front one: down from the key window's root, through what is presented, a navigation
     /// controller's top, a tab bar controller's selection, a split view's last column and a page view's page, to a
@@ -112,6 +113,15 @@
 
         /// Told as a navigation's screen is read, whether or not it is another screen.
         var onSettled: () -> Void = {}
+
+        /// The frames a navigation's read waits for a SwiftUI screen to be named: SwiftUI names one, by its marker and
+        /// its navigation title alike, as it renders it in the window, which the navigation's first frame can come
+        /// before on a busy main thread. Read then, it was told nameless, which settled the navigation on no screen,
+        /// and its declaration came after (the pre-push gate's first run of a fresh build, 2026-10-15).
+        static let namingFrames = 3
+
+        /// The frames the navigation in progress has waited for its screen's name.
+        private var namingWaited = 0
 
         private var begun = false
         /// When the navigation in progress drew its first frame.
@@ -235,6 +245,10 @@
             }
             if let vc = chain.last {
                 let c = candidate(vc)
+                if begun && awaitsName(c) {
+                    schedule()
+                    return
+                }
                 let same = lastRoute === c.route && lastRaw == c.raw
                 if begun || !same {
                     lastRoute = c.route
@@ -248,12 +262,24 @@
             }
             begun = false
             framedAt = nil
+            namingWaited = 0
             onSettled()
             kind = nil
             if !framed {
                 framed = true
                 signals.firstFrame()
             }
+        }
+
+        /// Whether a navigation's read waits a frame more for [c] to be named: a SwiftUI screen that has neither a
+        /// declaration nor a title yet, for `namingFrames` frames at most, after which it is told nameless, as a
+        /// screen nothing names.
+        private func awaitsName(_ c: Candidate) -> Bool {
+            guard c.raw == nil, c.declaration == nil, ScreenKinds.swiftUIHost(c.route),
+                namingWaited < ScreenWatcher.namingFrames
+            else { return false }
+            namingWaited += 1
+            return true
         }
 
         /// Reads again a second on, for a transition whose end no view controller says.

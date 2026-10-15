@@ -274,6 +274,72 @@
             XCTAssertEqual("declared /product/42", rec.calls.last)
         }
 
+        /// A watcher whose frames the test draws itself, with `frame()`, so that what comes before a frame is certain.
+        private var frames: [() -> Void] = []
+
+        private func watchingDrawnFrames() {
+            watcher = ScreenWatcher(
+                signals: rec, window: { [weak self] in self?.window },
+                nextFrame: { [weak self] in self?.frames.append($0) }, inFlight: { _ in false })
+        }
+
+        /// Draws a frame: what was waiting for the next one runs.
+        private func frame() {
+            let due = frames
+            frames.removeAll()
+            due.forEach { $0() }
+        }
+
+        func testASwiftUIScreenThatNamesItselfAfterItsNavigationsFirstFrameIsToldOnceNamed() {
+            // SwiftUI names a screen as it renders it in the window, by its marker and its navigation title alike, and
+            // on a busy main thread the navigation's first frame came first: read then, the screen was told nameless,
+            // which settled the navigation on no screen, and its declaration came after it (the pre-push gate's first
+            // run of a fresh build, 2026-10-15).
+            watchingDrawnFrames()
+            let nav = UINavigationController(rootViewController: ShopViewController())
+            launch(nav, screen: nav.topViewController!)
+            frame()
+            ScreenWatcher.current = watcher
+            defer { ScreenWatcher.current = nil }
+            rec.calls.removeAll()
+
+            let host = UIHostingController(rootView: Text("Linen shirt"))
+            watcher.loaded(host)
+            host.loadViewIfNeeded()
+            nav.pushViewController(host, animated: false)
+            watcher.willAppear(host, arriving: true)
+            watcher.didAppear(host)
+            frame()
+            XCTAssertEqual(["begin push"], rec.calls, "a SwiftUI screen not named yet is read again")
+
+            ScreenDeclarations.set(ScreenDeclaration(name: "/product/42", pageType: .productDetail), for: host)
+            frame()
+            XCTAssertEqual(["begin push", "shown /product/42 push"], rec.calls)
+            XCTAssertEqual(.productDetail, rec.declarations.last??.pageType)
+            XCTAssertTrue(frames.isEmpty, "the navigation is settled")
+        }
+
+        func testASwiftUIScreenThatNamesItselfAtNoFrameIsToldNamelessAFewFramesOn() {
+            watchingDrawnFrames()
+            let nav = UINavigationController(rootViewController: ShopViewController())
+            launch(nav, screen: nav.topViewController!)
+            frame()
+            rec.calls.removeAll()
+
+            let host = UIHostingController(rootView: Text("Wishlist"))
+            watcher.loaded(host)
+            host.loadViewIfNeeded()
+            nav.pushViewController(host, animated: false)
+            watcher.didAppear(host)
+            for _ in 0..<ScreenWatcher.namingFrames {
+                frame()
+                XCTAssertEqual(["begin push"], rec.calls)
+            }
+            frame()
+            XCTAssertEqual(["begin push", "shown nil push"], rec.calls, "as a screen nothing names, sent as none")
+            XCTAssertTrue(frames.isEmpty, "the navigation is settled")
+        }
+
         func testATabSwitchIsATabAndTheScreenIsTheSelectedTabs() {
             let shop = ShopViewController()
             let search = SearchViewController()
