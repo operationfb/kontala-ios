@@ -391,8 +391,8 @@ package final class WebSharing {
         // A message of the bridge is a few hundred bytes; anything far longer is no message of it.
         if raw.utf16.count > WebSharing.maxMessage { return }
         switch PageMessage.read(raw, nonce: a.nonce) {
-        case .hello?:
-            answer(a)
+        case .hello(let challenge)?:
+            answer(a, challenge: challenge)
         case .activity(let session)?:
             guard let id = host.webIdentity else { return }
             if id.mergeWeb(session.id, session.lastSeen) && active { write(force: true) }
@@ -405,8 +405,10 @@ package final class WebSharing {
         }
     }
 
-    /// Answers a page's hello: only in a main frame on one of the websites, once the SDK has its ids.
-    private func answer(_ a: Attachment) {
+    /// Answers a page's hello: only in a main frame on one of the websites, once the SDK has its ids, echoing the
+    /// hello's challenge, which the page takes its first context by. Each hello is answered with its own: a frame
+    /// inside the page can reach the channel too, and its hello must not take the place of the page's.
+    private func answer(_ a: Attachment, challenge: String?) {
         host.whenLoaded { [weak self, weak a] in
             guard let a = a else { return }
             a.webView.inspect { url, coverage in
@@ -423,7 +425,7 @@ package final class WebSharing {
                     a.answered = origin
                     a.coverage = coverage
                     self.host.webPageAnswered(a)
-                    self.push(a, force: true)
+                    self.push(a, force: true, challenge: challenge)
                 }
             }
         }
@@ -434,8 +436,9 @@ package final class WebSharing {
     }
 
     /// Tells an answered page the app's context: at once when anything but the session's last activity changed, and
-    /// otherwise at most every `pushIntervalMillis`.
-    private func push(_ a: Attachment, force: Bool = false) {
+    /// otherwise at most every `pushIntervalMillis`. An answer to a hello echoes its challenge; an update echoes none,
+    /// since the page takes it by the nonce its first context gave.
+    private func push(_ a: Attachment, force: Bool = false, challenge: String? = nil) {
         guard let origin = a.answered, let id = host.webIdentity, let app = host.appStamp, !a.detached, !stopped
         else { return }
         let now = host.nowMillis()
@@ -452,6 +455,7 @@ package final class WebSharing {
         var context = JSONObject()
         context["v"] = .int(Int64(WebViews.bridgeVersion))
         context["nonce"] = .string(a.nonce)
+        if let c = challenge { context["challenge"] = .string(c) }
         context["app"] = .object(app)
         context["device"] = .string(device)
         context["session"] = .string(s.id)

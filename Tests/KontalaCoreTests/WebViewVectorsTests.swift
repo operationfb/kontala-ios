@@ -73,8 +73,19 @@ final class WebViewVectorsTests: XCTestCase {
 
     func testAPinnedSessionIsTheAppsOwnWordAndStands() {
         let identity = Identity(store: FileStore(baseDir: nil), timeoutMillis: 60_000, pinnedSession: "pinned")
-        XCTAssertFalse(identity.mergeWeb("page", 1_760_000_000_000))
-        XCTAssertEqual("pinned", identity.sessionNow()?.id)
+        _ = identity.resolve(1_760_000_000_000)
+        XCTAssertFalse(identity.mergeWeb("page", 1_760_000_060_000))
+        XCTAssertEqual(WebSession("pinned", 1_760_000_000_000), identity.sessionNow())
+    }
+
+    func testAPinnedSessionSaysWhenItWasLastActiveAsAnyOtherDoes() {
+        let identity = Identity(store: FileStore(baseDir: nil), timeoutMillis: 60_000, pinnedSession: "pinned")
+        // A web page given it reads a last activity of 0 as lapsed, so there is none before the first event.
+        XCTAssertNil(identity.sessionNow())
+        _ = identity.resolve(300_000)
+        XCTAssertEqual(WebSession("pinned", 300_000), identity.sessionNow())
+        _ = identity.resolve(360_000, .away)
+        XCTAssertEqual(WebSession("pinned", 300_000), identity.sessionNow(), "time away is idle")
     }
 
     func testAPagesMessageIsReadAsTheVectorsReadItWithTheNonceTheAppGaveIt() {
@@ -87,7 +98,7 @@ final class WebViewVectorsTests: XCTestCase {
             }
             switch read.str("type") {
             case "hello":
-                XCTAssertEqual(.hello, m, reason)
+                XCTAssertEqual(.hello(challenge: read.str("challenge")), m, reason)
             case "activity":
                 guard case .activity(let s)? = m else { return XCTFail(reason) }
                 XCTAssertEqual(session(read["session"]), s, reason)

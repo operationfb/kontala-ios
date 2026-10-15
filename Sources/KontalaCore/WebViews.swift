@@ -192,12 +192,16 @@ package func cookieHeader(_ name: String, _ value: String, _ maxAgeSeconds: Int6
 /// What a page posts to the app, read: only a message of this protocol, and after the hello only one carrying the
 /// nonce the app gave the page, which a frame of another origin cannot read.
 package enum PageMessage: Equatable {
-    /// A page with the tag on it says hello, asking for the app's context.
-    case hello
+    /// A page with the tag on it says hello, asking for the app's context, with a challenge the app's answer echoes:
+    /// the page takes no context that does not. An older tag says none, and takes an answer echoing none.
+    case hello(challenge: String?)
     /// The page's last activity, which slides the app's visit.
     case activity(WebSession)
     /// Who the page's own sign-in names, or no one.
     case identify(user: String?, org: String?)
+
+    /// A hello's challenge: random, and long enough that a script of the page's own cannot guess it.
+    private static let challenge = Pattern("^[A-Za-z0-9_-]{16,64}$")
 
     /// A page's message, or nil for one the app ignores.
     package static func read(_ raw: String, nonce: String) -> PageMessage? {
@@ -205,7 +209,11 @@ package enum PageMessage: Equatable {
         // A number Dart reads as 1, 1.0 among them.
         guard m["kontala"]?.number == Double(WebViews.bridgeVersion) else { return nil }
         let type = m.str("type")
-        if type == "hello" { return .hello }
+        if type == "hello" {
+            guard let challenge = m["challenge"], !challenge.isNull else { return .hello(challenge: nil) }
+            guard let c = challenge.string, PageMessage.challenge.matches(c) else { return nil }
+            return .hello(challenge: c)
+        }
         guard m["nonce"] == .string(nonce) else { return nil }
         switch type {
         case "activity":

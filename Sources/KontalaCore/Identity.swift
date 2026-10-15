@@ -70,7 +70,8 @@ package final class Identity {
     private func load() {
         guard let m = store.readJson(Identity.file) else { return }
         if let d = m.str("device"), Ids.safeId.matches(d) { device = d }
-        guard let s = m.obj("session") else { return }
+        // A pinned session is the app's own, and a stored one another's.
+        guard pinnedSession == nil, let s = m.obj("session") else { return }
         if let id = s.str("id"), Ids.safeId.matches(id), let seen = s.long("last_seen") {
             session = id
             lastSeen = seen
@@ -94,18 +95,20 @@ package final class Identity {
         let device = pinnedDevice ?? self.device!
         var rotated = false
         let session: String
+        let lapsed = wouldRotate(nowMs)
         if let pinned = pinnedSession {
             session = pinned
         } else {
-            let lapsed = wouldRotate(nowMs)
             if self.session == nil || (lapsed && presence == .here) {
                 self.session = Ids.uuidV4()
                 rotated = true
             }
             session = self.session!
-            let slides = presence == .here || (presence == .leaving && !lapsed)
-            if slides && (lastSeen == nil || nowMs > lastSeen!) { lastSeen = nowMs }
         }
+        // A pinned session never lapses, but it is active as any other is, which a web page it is given must know: a
+        // last activity of 0 reads as lapsed.
+        let slides = presence == .here || (presence == .leaving && !lapsed)
+        if slides && (lastSeen == nil || nowMs > lastSeen!) { lastSeen = nowMs }
         dirty = true
         if minted || rotated || writtenAt == nil || abs(nowMs - writtenAt!) >= 1000 { flush(nowMs) }
         return Resolved(device: device, session: session, rotated: rotated)
@@ -144,11 +147,10 @@ package final class Identity {
         return d
     }
 
-    /// The session in force and when it was last active, without sliding it: nil before the first event, or for a
-    /// pinned one, which a page is given as it is.
+    /// The session in force and when it was last active, without sliding it, which a page is given as it is: nil
+    /// before the first event in the app, pinned or not.
     package func sessionNow() -> WebSession? {
-        if let p = pinnedSession { return WebSession(p, lastSeen ?? 0) }
-        guard let id = session, let seen = lastSeen else { return nil }
+        guard let id = pinnedSession ?? session, let seen = lastSeen else { return nil }
         return WebSession(id, seen)
     }
 

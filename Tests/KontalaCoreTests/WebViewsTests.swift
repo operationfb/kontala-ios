@@ -22,8 +22,11 @@ final class WebViewsTests: XCTestCase {
 
     private let shop = "https://shop.example.com"
 
+    /// The challenge a page's hello sends, which the app's answer echoes.
+    private let challenge = "5b8f2c1e-9d3a-4e7b-8c6f-1a2b3c4d5e6f"
+
     /// A page with the tag on it saying hello.
-    private let hello = #"{"kontala":1,"type":"hello"}"#
+    private var hello: String { #"{"kontala":1,"type":"hello","challenge":"\#(challenge)"}"# }
 
     private func activity(_ nonce: String, _ s: WebSession) -> String {
         #"{"kontala":1,"type":"activity","nonce":"\#(nonce)","session":"\#(s.id)","last_seen":\#(s.lastSeen)}"#
@@ -264,6 +267,7 @@ final class WebViewsTests: XCTestCase {
         XCTAssertEqual(webView.contexts.count, 1)
         let context = webView.contexts[0]
         XCTAssertEqual(1, context.long("v"))
+        XCTAssertEqual(challenge, context.str("challenge"))
         let nonce = context.str("nonce")!
         XCTAssertTrue(nonce.count >= 16)
         XCTAssertEqual(view.str("device"), context.str("device"))
@@ -333,6 +337,42 @@ final class WebViewsTests: XCTestCase {
             activity(context.str("nonce")!, WebSession("the-pages-own", context.long("last_seen")! + 1000)))
         XCTAssertEqual(context.str("session"), webView.contexts.last?.str("session"))
         XCTAssertEqual(2, webView.contexts.count)
+        // An update the page takes by the nonce of its first context.
+        XCTAssertNil(webView.contexts.last?["challenge"])
+        XCTAssertEqual(context.str("nonce"), webView.contexts.last?.str("nonce"))
+        s.finish()
+    }
+
+    func testAnswersEachHelloWithItsOwnChallengeAFramesInsideThePageAmongThem() {
+        let s = start()
+        let webView = FakeWebView(url: "\(shop)/")
+        let attachment = attach(s, webView)
+        // A frame inside the page can reach the channel too; its hello must not take the place of the page's,
+        // whichever comes first.
+        receive(s, attachment, hello)
+        receive(s, attachment, #"{"kontala":1,"type":"hello","challenge":"7c1d9e2f-3a4b-4c5d-8e6f-a1b2c3d4e5f6"}"#)
+        XCTAssertEqual(
+            [challenge, "7c1d9e2f-3a4b-4c5d-8e6f-a1b2c3d4e5f6"], webView.contexts.map { $0.str("challenge") })
+        // An older tag's hello says no challenge, and is answered echoing none; one whose challenge is not of the
+        // protocol is no hello.
+        receive(s, attachment, #"{"kontala":1,"type":"hello"}"#)
+        receive(s, attachment, #"{"kontala":1,"type":"hello","challenge":"short"}"#)
+        XCTAssertEqual(3, webView.contexts.count)
+        XCTAssertNil(webView.contexts.last?["challenge"])
+        s.finish()
+    }
+
+    func testGivesAPageAPinnedSessionWithWhenItWasLastActive() {
+        let store = FakeCookieStore()
+        let s = start(KontalaOptions(sessionId: "pinned-session", webOrigins: [shop]), cookies: store)
+        let webView = FakeWebView(url: "\(shop)/")
+        receive(s, attach(s, webView), hello)
+        // The tag takes no context, and reads no cookie, whose last activity is 0: it would be a visit that lapsed
+        // in 1970.
+        let context = webView.contexts[0]
+        XCTAssertEqual("pinned-session", context.str("session"))
+        XCTAssertGreaterThan(context.long("last_seen") ?? 0, 0)
+        XCTAssertEqual(WebSession("pinned-session", context.long("last_seen") ?? 0), store.session("\(shop)/"))
         s.finish()
     }
 
@@ -343,6 +383,7 @@ final class WebViewsTests: XCTestCase {
         Kontala.consent(.denied)
         s.scheduler.runDue()
         XCTAssertEqual(["granted", "denied"], webView.contexts.map { $0.str("consent")! })
+        XCTAssertEqual([challenge, nil], webView.contexts.map { $0.str("challenge") })
         s.finish()
     }
 
