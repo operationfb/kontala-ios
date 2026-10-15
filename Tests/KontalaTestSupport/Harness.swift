@@ -261,7 +261,37 @@ package final class FakePlatform: Platform {
     package func fingerprint(_ done: @escaping (Int64?) -> Void) { done(fingerprinter?()) }
 
     package func screenReady() { readied() }
+
+    /// The IAB TCF keys an app's consent manager wrote, as the platform hands them over, and how often they were read.
+    package var tcf: JSONObject?
+    package var tcfReads = 0
+    private var tcfChanged: (() -> Void)?
+
+    package func tcfKeys() -> JSONObject? {
+        tcfReads += 1
+        return tcf
+    }
+
+    package func watchTcf(_ changed: @escaping () -> Void) { tcfChanged = changed }
+
+    /// A consent manager wrote [keys], which UserDefaults' notification tells of.
+    package func writeTcf(_ keys: JSONObject?) {
+        tcf = keys
+        tcfChanged?()
+    }
 }
+
+/// What a consent manager writes once the visitor accepted storage and measurement alone: IAB TCF purposes 1 and 8.
+package let tcfMeasureOnly: JSONObject = [
+    "IABTCF_CmpSdkID": 300, "IABTCF_gdprApplies": 1, "IABTCF_PurposeConsents": "10000001", "tc_string_present": true,
+]
+
+/// What a consent manager writes once the visitor accepted everything.
+package let tcfAll: JSONObject = {
+    var o = tcfMeasureOnly
+    o["IABTCF_PurposeConsents"] = "11111111111"
+    return o
+}()
 
 /// The cookie store the app's web views share: the cookies each origin's pages see.
 package final class FakeCookieStore {
@@ -374,7 +404,8 @@ package func startKontala(
     state: AppState = .resumed,
     start: Int64 = goldenStartMicros,
     cookies: FakeCookieStore? = nil,
-    holdConfig: Bool = false
+    holdConfig: Bool = false,
+    tcf: JSONObject? = nil
 ) -> Session {
     let scheduler = FakeScheduler(nowMicros: start)
     let collector = FakeCollector()
@@ -382,6 +413,7 @@ package func startKontala(
     collector.holdConfig = holdConfig
     let platform = FakePlatform(facts: facts, state: state, ids: ids)
     platform.cookies = cookies
+    platform.tcf = tcf
     guard
         let running = Kontala.start(
             writeKey: "pk_live_test",
@@ -411,6 +443,23 @@ package func contract2(
     if friction { o["friction"] = repoJson("collector/tagconfig/testdata/friction.golden.json")["friction"] }
     o["custom_events"] = .bool(customEvents)
     o["screen_properties"] = .bool(screenProperties)
+    return o
+}
+
+/// The consent section a property capturing consent is served with no mapping of its own (collector/consent's
+/// `Serve`): every reader, each with the catalog's map, read from the collector's own vectors.
+package func consentSection() -> JSONObject {
+    let v = repoJson("collector/consent/testdata/vectors.json")
+    return ["v": 1, "sources": v["readers"]!, "maps": v["defaults"]!]
+}
+
+/// What a region on contract 3 serves an app: contract 2's sections and the consent section, unless [consent] is off.
+package func contract3(rev: String = "rev-3", consent: Bool = true, scroll: Bool = true, friction: Bool = true)
+    -> JSONObject
+{
+    var o = contract2(rev: rev, scroll: scroll, friction: friction)
+    o["contract"] = 3
+    if consent { o["consent"] = .object(consentSection()) }
     return o
 }
 

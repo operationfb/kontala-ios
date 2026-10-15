@@ -225,6 +225,52 @@ final class TransportTests: XCTestCase {
         XCTAssertTrue(sealedFiles.isEmpty)
     }
 
+    func testACollectorThatRefusesContract3IsSentTheBatchAt2AndRefusingThatTooAt1() {
+        let c = collector { n, body in
+            n < 2
+                ? Reply(
+                    status: 400,
+                    body: Json.encode(
+                        ["error": ["code": "unknown_field", "message": "json: unknown field"]] as JSONObject))
+                : self.ok(body)
+        }
+        let lock = NSLock()
+        var refused = 0
+        let r = rig(c.endpoint, contract: 3) {
+            lock.lock()
+            refused += 1
+            lock.unlock()
+        }
+        let signals = KontalaConsentSignals(analytics: false, source: "app", status: "ready", decided: true)
+        let view = ev(r.clock, "page_view", ["screen": ["name": "/", "navigation": "launch"]])
+        view.signals = signals
+        let change = ev(r.clock, "consent_change", ["consent_change": ["answers": ["app": ["analytics": false]]]])
+        change.view = view.id
+        change.signals = signals
+        let depth = ev(
+            r.clock, "scroll_depth",
+            ["scroll": ["trigger": "hide", "depth_px": 900, "height_px": 1800, "root": "element"]])
+        depth.view = view.id
+        r.run {
+            r.queue.add(view)
+            r.queue.add(change)
+            r.queue.add(depth)
+        }
+        r.flush()
+        until { c.received.count == 3 }
+        XCTAssertEqual([view.id, change.id, depth.id], c.received[0].ids)
+        XCTAssertEqual([view.id, depth.id], c.received[1].ids, "what contract 3 alone has left out")
+        XCTAssertTrue(
+            (c.received[1].body.list("events") ?? []).allSatisfy { $0.object?.contains("consent_signals") == false })
+        XCTAssertEqual([view.id], c.received[2].ids, "and then what contract 2 alone has")
+        until {
+            lock.lock()
+            defer { lock.unlock() }
+            return refused == 2
+        }
+        XCTAssertTrue(sealedFiles.isEmpty)
+    }
+
     func testA401StopsSendingForTheProcessAndA400DropsTheBatchAlone() {
         let c = collector { n, _ in
             Reply(

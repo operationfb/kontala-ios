@@ -46,7 +46,7 @@ package enum SendOutcome {
 /// | 429, 503                            | Retried after `Retry-After`, with jitter, and the same body.                |
 /// | Network error, timeout, another 5xx | Retried with exponential backoff, 1 s doubling to 5 min.                    |
 /// | 413                                 | Split in half and retried.                                                  |
-/// | 400 `unknown_field`                 | Written again at contract 1 and sent, where it held anything of contract 2. |
+/// | 400 `unknown_field`                 | Written again at the contract before and sent, where it held anything later. |
 /// | 400, 403, 415                       | Dropped as an SDK fault.                                                    |
 /// | 401                                 | Kept; sending stops for the process.                                        |
 ///
@@ -63,8 +63,8 @@ package final class Sender {
     private let http: Http
     private let scheduler: Scheduler
     private let onOutcome: ((SealedBatch, SendOutcome) -> Void)?
-    /// Told when the collector refused a request for a field it does not read and a contract 1 copy of it was sent
-    /// instead.
+    /// Told when the collector refused a request for a field it does not read and a copy of it at the contract before
+    /// was sent instead.
     private let onContractRefused: (() -> Void)?
     private let log: ((String) -> Void)?
     private let random: () -> Double
@@ -206,14 +206,17 @@ package final class Sender {
         }
     }
 
-    /// Replaces a batch a collector refused for a field it does not read with its contract 1 copy, kept on disk as the
-    /// batch was, and answers whether the refusal was that: a body with nothing of a later contract in it is an SDK
-    /// fault, and dropped as one. A batch of contract 2's kinds alone has nothing left to send, and is done.
+    /// Replaces a batch a collector refused for a field it does not read with its copy at the contract before, kept on
+    /// disk as the batch was, and answers whether the refusal was that: a body with nothing of a later contract in it
+    /// is an SDK fault, and dropped as one. A batch of a later contract's kinds alone has nothing left to send, and is
+    /// done.
     private func downgrade(_ batch: SealedBatch) -> Bool {
         guard let body = WireEncoder.downgrade(batch.body) else { return false }
         if batches.first !== batch { return false }
         let left = body.list("events")?.count ?? 0
-        log?("the collector does not read contract 2; \(batch.events - left) events of it were left out")
+        log?(
+            "the collector does not read the contract the request was written at; "
+                + "it is sent again at the one before, \(batch.events - left) events left out")
         onContractRefused?()
         if left == 0 {
             finish(batch, .delivered(accepted: 0, refused: [], warnings: []))

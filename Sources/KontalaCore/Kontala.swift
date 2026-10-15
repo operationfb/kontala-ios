@@ -131,7 +131,8 @@ public enum Kontala {
     public static var isOptedOut: Bool { locked { optOutMirror } ?? false }
 
     /// The visitor's answer: `.granted` sends everything and stores the ids; `.denied` and `.unknown` store nothing,
-    /// send rows the collector redacts, and leave out taps.
+    /// send rows the collector redacts, and leave out taps. Granted and denied are also recorded as the app's answer
+    /// for analytics, as `setConsentSignals` records one.
     public static func consent(_ state: KontalaConsent) {
         locked {
             consentMirror = state
@@ -144,6 +145,22 @@ public enum Kontala {
     public static var consentState: KontalaConsent {
         locked { consentMirror ?? pendingConsent ?? running?.core.options.consent } ?? .granted
     }
+
+    /// What the visitor answered in the app's consent manager, for each of three buckets: [functional], [analytics]
+    /// (performance and analytics) and [targeting] (targeting and advertising). Each call replaces the app's answers
+    /// whole: a nil says nothing of its bucket, and all nil takes the app's answers back. Call it as the app starts with
+    /// a stored answer, and whenever the visitor answers.
+    ///
+    /// Every event records them, beside the IAB TCF answers a consent manager writes in the app's standard
+    /// UserDefaults, which Kontala reads by itself and which the app's own answers outrank, where the property captures
+    /// consent. They decide nothing yet: what is sent and stored follows `consent`.
+    public static func setConsentSignals(functional: Bool? = nil, analytics: Bool? = nil, targeting: Bool? = nil) {
+        call { $0.setConsentSignals(functional, analytics, targeting) }
+    }
+
+    /// What the next event records of the visitor's answers, or nil while none is recorded: before `start`, or where
+    /// the property captures no consent.
+    public static var consentSignals: KontalaConsentSignals? { locked { running }?.core.consentSignals }
 
     /// A custom event, the app's counterpart of a data layer push. Its [properties] are data layer data, discovered and
     /// mapped in Kontala.

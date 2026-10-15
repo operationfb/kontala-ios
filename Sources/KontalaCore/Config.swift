@@ -1,8 +1,8 @@
 import Foundation
 
 /// The contract of the Events API this SDK writes at most: 2 adds what an app measures of a screen, its device and its
-/// forms.
-package let sdkContract = 2
+/// forms, and 3 what the visitor answered in a consent manager.
+package let sdkContract = 3
 
 /// What makes a swipe, and how many one page sends: the served scroll section's, held to the bounds the tag holds it
 /// to.
@@ -156,11 +156,14 @@ package struct ServedConfig: Equatable {
     /// The websites the app shows in a web view, with which the SDK shares its visitor and its visit: the property's
     /// own allowed origins and the other websites of the organisation it names in Kontala.
     package var webOrigins: [WebOrigin]
+    /// The consent managers read and what their answers mean, when the property captures consent at contract 3;
+    /// without it nothing of the visitor's answers is sent.
+    package var consent: ConsentSection?
 
     package init(
         contract: Int, rev: String? = nil, clicks: Bool = true, scroll: ScrollRules? = nil,
         friction: FrictionRules? = nil, customEvents: Bool = true, screenProperties: Bool = true,
-        webOrigins: [WebOrigin] = []
+        webOrigins: [WebOrigin] = [], consent: ConsentSection? = nil
     ) {
         self.contract = contract
         self.rev = rev
@@ -170,6 +173,7 @@ package struct ServedConfig: Equatable {
         self.customEvents = customEvents
         self.screenProperties = screenProperties
         self.webOrigins = webOrigins
+        self.consent = consent
     }
 
     /// What an app sends to a collector that has said nothing.
@@ -206,7 +210,8 @@ package struct ServedConfig: Equatable {
             friction: c >= 2 ? FrictionRules.parse(r["friction"]) : nil,
             customEvents: r["custom_events"] == .bool(true),
             screenProperties: r["screen_properties"] == .bool(true),
-            webOrigins: webOrigins(r["web_views"])
+            webOrigins: webOrigins(r["web_views"]),
+            consent: c >= 3 ? ConsentSection.parse(r["consent"]) : nil
         )
     }
 }

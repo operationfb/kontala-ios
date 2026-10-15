@@ -180,13 +180,14 @@ package final class EventQueue {
         writeNow()
     }
 
-    /// Deletes every event waiting, for an opt-out.
+    /// Deletes every event waiting, for an opt-out, a crash's row an earlier process left among them.
     package func clear() {
         pendingEvents.removeAll()
         pendingBytes = 0
         while sender.dropOldest() != nil {
             // Every batch the sender holds goes.
         }
+        store.delete(EventQueue.crash)
         writeNow()
     }
 

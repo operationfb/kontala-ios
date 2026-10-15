@@ -27,6 +27,7 @@ package let reservedEventNames: Set<String> = [
     "page_view",
     "click",
     "view_time",
+    "consent_change",
 ]
 
 /// Whether [u] is a letter or a number, as `\p{L}` and `\p{N}` read one.

@@ -189,6 +189,9 @@ package final class CapturedEvent {
     /// stored.
     package let presence: Presence
     package var consent: String
+    /// What the visitor had answered in a consent manager, stamped with `consent` as the event is released; nil where
+    /// the region serves no consent section.
+    package var signals: KontalaConsentSignals?
     package var device: String?
     package var session: String?
     package var user: String?
@@ -203,8 +206,8 @@ package final class CapturedEvent {
     package init(
         id: String, kind: String, atMicros: Int64, monotonic: Int64? = nil, fields: JSONObject,
         context: ContextSnapshot, view: String? = nil, namedUser: String? = nil, namedOrg: String? = nil,
-        presence: Presence = .here, consent: String = "unknown", device: String? = nil, session: String? = nil,
-        user: String? = nil, org: String? = nil
+        presence: Presence = .here, consent: String = "unknown", signals: KontalaConsentSignals? = nil,
+        device: String? = nil, session: String? = nil, user: String? = nil, org: String? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -217,6 +220,7 @@ package final class CapturedEvent {
         self.namedOrg = namedOrg
         self.presence = presence
         self.consent = consent
+        self.signals = signals
         self.device = device
         self.session = session
         self.user = user
@@ -235,6 +239,7 @@ package final class CapturedEvent {
         o["ctx"] = .object(context.toJson())
         if let v = view { o["view"] = .string(v) }
         o["consent"] = .string(consent)
+        if let v = signals { o["signals"] = .object(v.toJson()) }
         if let v = device { o["device"] = .string(v) }
         if let v = session { o["session"] = .string(v) }
         if let v = user { o["user"] = .string(v) }
@@ -257,6 +262,7 @@ package final class CapturedEvent {
             context: ContextSnapshot.fromJson(m.obj("ctx") ?? JSONObject()),
             view: m.str("view"),
             consent: m.str("consent") ?? "unknown",
+            signals: KontalaConsentSignals.fromJson(m["signals"]),
             device: m.str("device"),
             session: m.str("session"),
             user: m.str("user"),

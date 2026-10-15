@@ -415,6 +415,52 @@ final class MeasuresTests: XCTestCase {
         XCTAssertNotNil(t.core.crashContext)
     }
 
+    func testConsentWithdrawnAnOptOutOrAResetLeavesACrashNothingToBeWrittenWith() throws {
+        for leave in [{ Kontala.consent(.denied) }, { Kontala.optOut(true) }, { Kontala.reset() }] {
+            let s = session(storage: tempDir())
+            XCTAssertNotNil(s.core.crashContext)
+            leave()
+            s.scheduler.runDue()
+            XCTAssertNil(s.core.crashContext, "no row stamped granted, or with the ids left behind")
+            s.finish()
+        }
+    }
+
+    func testAnOptOutDeletesACrashsRowWaitingForTheNextLaunch() throws {
+        let dir = tempDir()
+        let file = URL(fileURLWithPath: dir).appendingPathComponent("kontala").appendingPathComponent(CrashContext.file)
+        func crash(_ s: Session) throws {
+            let context = try XCTUnwrap(s.core.crashContext)
+            XCTAssertTrue(
+                CrashRecorder().record(
+                    Thrown(name: "NSInternalInconsistencyException", message: "No size chart"), context, tap: nil))
+            XCTAssertTrue(FileManager.default.fileExists(atPath: file.path))
+        }
+        // A process an app's own handler kept alive, whose visitor opts out.
+        let s = session(storage: dir)
+        try crash(s)
+        Kontala.optOut(true)
+        s.scheduler.runDue()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path), "deleted with the rest of the queue")
+        s.finish()
+
+        // A row an earlier process left, at a launch whose visitor had opted out.
+        let t = session(storage: dir)
+        Kontala.optOut(false)
+        Kontala.screen("/product/42")
+        t.scheduler.runDue()
+        try crash(t)
+        t.finish()
+        let meta = URL(fileURLWithPath: dir).appendingPathComponent("kontala").appendingPathComponent(Core.meta)
+        try Data(#"{"opted_out":true}"#.utf8).write(to: meta)
+        let next = startKontala(facts: testFacts(storageDir: dir), served: contract2())
+        next.advanceMillis(500)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path), "deleted as the launch clears the queue")
+        next.sendAll()
+        XCTAssertEqual([], next.collector.named("js_error"))
+        next.finish()
+    }
+
     func testAnExceptionsSourceIsTheFirstFrameOfTheAppsOwnCodeAndOneTheSDKRaisedIsNone() {
         let app = "/private/var/containers/Bundle/Application/1A2B/ShopApp.app"
         func frame(_ image: String, _ symbol: String?, _ offset: Int? = 64) -> Messages.NativeFrame {

@@ -274,6 +274,7 @@ final class WebViewsTests: XCTestCase {
         XCTAssertEqual(view.str("session"), context.str("session"))
         XCTAssertNotNil(context.long("last_seen"))
         XCTAssertEqual("granted", context.str("consent"))
+        XCTAssertFalse(context.contains("consent_signals"), "none recorded where no section is served")
         XCTAssertEqual("anna@example.com", context.str("user"))
         XCTAssertEqual(
             [
@@ -373,6 +374,32 @@ final class WebViewsTests: XCTestCase {
         XCTAssertEqual("pinned-session", context.str("session"))
         XCTAssertGreaterThan(context.long("last_seen") ?? 0, 0)
         XCTAssertEqual(WebSession("pinned-session", context.long("last_seen") ?? 0), store.session("\(shop)/"))
+        s.finish()
+    }
+
+    func testTellsAnAnsweredPageWhatTheVisitorAnsweredInAConsentManagerAsItChanges() {
+        let s = startKontala(
+            KontalaOptions(webOrigins: [shop]), facts: testFacts(storageDir: dir), served: contract3(),
+            cookies: FakeCookieStore(), tcf: tcfMeasureOnly)
+        Kontala.screen("/")
+        s.scheduler.runDue()
+        let webView = FakeWebView(url: "\(shop)/")
+        receive(s, attach(s, webView), hello)
+        Kontala.setConsentSignals(targeting: true)
+        s.scheduler.runDue()
+        XCTAssertEqual(["granted", "granted"], webView.contexts.map { $0.str("consent")! })
+        XCTAssertEqual(
+            [
+                [
+                    "functional": false, "analytics": true, "targeting": false, "source": "tcf", "status": "ready",
+                    "decided": true,
+                ],
+                [
+                    "functional": false, "analytics": true, "targeting": true, "source": "app", "status": "ready",
+                    "decided": true,
+                ],
+            ],
+            webView.contexts.map { $0.obj("consent_signals") })
         s.finish()
     }
 

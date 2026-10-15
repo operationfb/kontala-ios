@@ -29,6 +29,7 @@ package final class Core: PluginContext, WebSharingHost {
         "page_restore",
         "view_time",
         "page_type",
+        "consent_change",
     ]
 
     private let writeKey: String
@@ -97,6 +98,28 @@ package final class Core: PluginContext, WebSharingHost {
         maxHeld: 250,
         scheduler: scheduler,
         release: { [weak self] events, state, held in self?.release(events, state, held) })
+
+    /// What the app and its consent manager said about the visitor, which every event records where the region
+    /// serves a consent section. It decides nothing: `gate` alone does.
+    private let consentRecorder = ConsentRecorder()
+
+    /// What the next event records of the visitor's answers, for the app's thread to read.
+    package var consentSignals: KontalaConsentSignals? {
+        signalsLock.lock()
+        defer { signalsLock.unlock() }
+        return publishedSignals
+    }
+
+    private let signalsLock = NSLock()
+    private var publishedSignals: KontalaConsentSignals?
+
+    /// Whether an event of this launch was stamped, and the signals the last one carried, which a change of them is
+    /// told against.
+    private var stamped = false
+    private var lastSignals: KontalaConsentSignals?
+
+    /// Whether the app's IAB TCF keys are watched.
+    private var tcfWatched = false
 
     package let screens = ScreensPlugin()
     package let lifecycle = LifecyclePlugin()
@@ -301,6 +324,42 @@ package final class Core: PluginContext, WebSharingHost {
         publishSwitches()
         for l in servedListeners { l(c) }
         webViews.originsChanged()
+        consentServed(c)
+    }
+
+    // What the visitor answered in a consent manager.
+
+    /// The consent section served, or none: the IAB TCF keys are read and watched from the first that asks for them.
+    private func consentServed(_ c: ServedConfig) {
+        if consentRecorder.served(c.contract >= 3 ? c.consent : nil) { signalsChanged() }
+        if !consentRecorder.readsTcf || tcfWatched { return }
+        tcfWatched = true
+        platform.watchTcf { [weak self] in
+            guard let self = self else { return }
+            self.scheduler.post { if !self.stopped { self.readTcf() } }
+        }
+        readTcf()
+    }
+
+    /// Reads the app's IAB TCF keys, on the core's queue.
+    private func readTcf() {
+        if consentRecorder.tcf(platform.tcfKeys()) { signalsChanged() }
+    }
+
+    /// What the visitor answered changed. The pages the app shows are told, unless [pages] is false, for a caller
+    /// that tells them itself; and where an event of this launch carried other answers, a `consent_change` says what
+    /// each source answered, filed under the screen in force, so the screen's view records what came after its screen
+    /// view.
+    private func signalsChanged(pages: Bool = true) {
+        let now = consentRecorder.signals
+        signalsLock.lock()
+        publishedSignals = now
+        signalsLock.unlock()
+        if pages { webViews.signalsChanged() }
+        guard let current = now, stamped, current != lastSignals, view != nil else { return }
+        let answers = consentRecorder.answers()
+        if answers.isEmpty { return }
+        emit(consentChangeName, ["consent_change": .object(["answers": .object(answers)])], measure: true)
     }
 
     /// Tells the main thread what is captured and by which rules, as what is served and what the API said change.
@@ -558,6 +617,8 @@ package final class Core: PluginContext, WebSharingHost {
 
     package var pageConsent: KontalaConsent { optedOutFlag ? .denied : gate.state }
 
+    package var pageSignals: KontalaConsentSignals? { consentRecorder.signals }
+
     package var appStamp: JSONObject? {
         guard let f = facts else { return nil }
         var m = JSONObject()
@@ -601,6 +662,9 @@ package final class Core: PluginContext, WebSharingHost {
                 continue
             }
             e.consent = state.wire
+            // What the visitor answered, as the consent is, at release: a held event records the answer it waited
+            // for.
+            e.signals = consentRecorder.signals
             // The device's ids ride on a granted event alone.
             if state == .granted, let ids = deviceIds, !ids.isEmpty { e.context.ids = ids }
             if let s = shared {
@@ -609,6 +673,8 @@ package final class Core: PluginContext, WebSharingHost {
             }
             if !beforeSend(e) { continue }
             q.add(e)
+            stamped = true
+            lastSignals = e.signals
             if state == .granted { publishCrash(e) }
         }
     }
@@ -809,9 +875,11 @@ package final class Core: PluginContext, WebSharingHost {
             for l in showListeners { l(away, reopened) }
             sender?.sendNow()
             // What is served may have changed while the app was away, and so
-            // may whether the visitor allows ad tracking.
+            // may whether the visitor allows ad tracking, and what they
+            // answered in the app's consent manager.
             config?.refresh()
             if storageAllowed { readIds() }
+            if tcfWatched { readTcf() }
             webViews.resumed()
         }
     }
@@ -925,6 +993,8 @@ package final class Core: PluginContext, WebSharingHost {
     package func reset() {
         principal.set()
         if let id = identity { id.forget() } else { resetCall = true }
+        // A crash is stamped with the ids of the next event released, never the ones forgotten.
+        crashContext = nil
         // The pages the app shows forget the visitor with it.
         webViews.forgotten()
     }
@@ -935,6 +1005,7 @@ package final class Core: PluginContext, WebSharingHost {
         optOutCall = out
         optedOutFlag = out
         if out {
+            crashContext = nil
             gate.clear()
             early.removeAll()
             queue?.clear()
@@ -953,15 +1024,27 @@ package final class Core: PluginContext, WebSharingHost {
         store?.writable = allowed
         identity?.setStorageAllowed(allowed)
         if !allowed { queue?.save() }
-        if state != .granted { deviceIds = nil }
+        if state != .granted {
+            deviceIds = nil
+            // A crash's row is written as granted, with the ids the grant allowed, so none is written without it.
+            crashContext = nil
+        }
+        // The answer is the app's for analytics too: recorded before the held events are released, which record it,
+        // and told once they are, so a change of it is sent only under the consent it leaves in force.
+        let changed = consentRecorder.legacy(state)
         gate.set(state)
         if allowed && ready {
             launchRecord()
             config?.keep()
         }
         if state == .granted && ready { readIds() }
+        if changed { signalsChanged(pages: false) }
         // The pages the app shows are told, and their cookies follow it.
         webViews.consentChanged()
+    }
+
+    package func setConsentSignals(_ functional: Bool?, _ analytics: Bool?, _ targeting: Bool?) {
+        if consentRecorder.set(functional: functional, analytics: analytics, targeting: targeting) { signalsChanged() }
     }
 
     /// Reads the platform's ids for the device, which ride on granted events from then on: read only once consent is

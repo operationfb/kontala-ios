@@ -161,6 +161,61 @@
         func webViewShown(_ frames: Int, _ done: @escaping (Bool) -> Void) {
             DispatchQueue.main.async { WebViewFinder.look(ScreenWatcher.keyWindow, frames: frames, done) }
         }
+
+        private let tcf = TcfDefaults()
+
+        func tcfKeys() -> JSONObject? { tcf.keys() }
+
+        func watchTcf(_ changed: @escaping () -> Void) { tcf.watch(changed) }
+    }
+
+    /// The IAB TCF keys an app's consent manager writes in the standard UserDefaults, which any thread may read, and
+    /// a watch on them.
+    final class TcfDefaults {
+        private let lock = NSLock()
+        /// The keys as last told, which each change is held to: UserDefaults says that something changed, and never
+        /// what.
+        private var seen: JSONObject?
+        private var observer: NSObjectProtocol?
+        /// Where each change is held to them, one at a time, never on the thread that wrote it, which is often the
+        /// main thread.
+        private let queue: OperationQueue = {
+            let q = OperationQueue()
+            q.name = "la.konta.kontala.tcf"
+            q.maxConcurrentOperationCount = 1
+            q.qualityOfService = .utility
+            return q
+        }()
+
+        deinit {
+            if let o = observer { NotificationCenter.default.removeObserver(o) }
+        }
+
+        func keys() -> JSONObject? {
+            let defaults = UserDefaults.standard
+            return tcfKeysOf { defaults.object(forKey: $0) }
+        }
+
+        /// Calls [changed] whenever the keys change, from the first call on; a second call changes nothing.
+        func watch(_ changed: @escaping () -> Void) {
+            lock.lock()
+            defer { lock.unlock() }
+            if observer != nil { return }
+            seen = keys()
+            // Every defaults object of the process, not the standard one alone: a consent manager may write the
+            // standard domain through an object of its own, whose changes are posted with that object.
+            observer = NotificationCenter.default.addObserver(
+                forName: UserDefaults.didChangeNotification, object: nil, queue: queue
+            ) { [weak self] _ in
+                guard let self = self else { return }
+                let now = self.keys()
+                self.lock.lock()
+                let same = now == self.seen
+                self.seen = now
+                self.lock.unlock()
+                if !same { changed() }
+            }
+        }
     }
 
     /// Time iOS gives a hidden app to finish something, ended once, by the SDK or as the time runs out.

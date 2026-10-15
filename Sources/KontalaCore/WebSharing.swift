@@ -49,6 +49,10 @@ package protocol WebSharingHost: AnyObject {
     /// The consent a page is told: the app's, and denied for a visitor who opted out.
     var pageConsent: KontalaConsent { get }
 
+    /// What the visitor answered in the app's consent manager, which a page records as the answer of the source
+    /// `app`; nil while the SDK records none.
+    var pageSignals: KontalaConsentSignals? { get }
+
     var principal: Principal { get }
 
     /// The app as a page is told it: its id, version, build, how it was built, whether it runs on a simulator, and
@@ -81,8 +85,8 @@ package protocol WebSharingHost: AnyObject {
 ///   app is hidden; read back as the app comes back, at every screen change, and every minute while a web view is on
 ///   show. Only while consent is granted: a change away from it deletes them, as the tag's own `clear` does.
 /// - **The bridge**, for a web view attached with `Kontala.attachWebView`: a page on one of the websites that says
-///   hello is told the app's context (its ids, consent, signed-in user and the app), again whenever that changes, and
-///   its activity and own sign-in are taken.
+///   hello is told the app's context (its ids, consent and what the visitor answered in its consent manager,
+///   signed-in user and the app), again whenever that changes, and its activity and own sign-in are taken.
 ///
 /// Every method runs on the core's queue; the platform's answers are posted back to it.
 package final class WebSharing {
@@ -210,6 +214,13 @@ package final class WebSharing {
 
     /// The app's signed-in user changed: attached pages are told.
     package func principalChanged() { pushAll() }
+
+    /// What the visitor answered in a consent manager changed: attached pages are told, and nothing about the cookies
+    /// changes with it.
+    package func signalsChanged() {
+        if stopped { return }
+        pushAll()
+    }
 
     /// The app forgot its visitor: the cookies go, and the next event writes the new ids.
     package func forgotten() {
@@ -447,8 +458,10 @@ package final class WebSharing {
         let s = id.sessionNow() ?? WebSession(id.resolve(now).session, now)
         let device = id.deviceId
         let consent = host.pageConsent.wire
+        let signals = host.pageSignals?.toJson()
         let p = host.principal
-        let said = "\(device)|\(s.id)|\(consent)|\(p.user ?? "null")|\(p.org ?? "null")"
+        let said =
+            "\(device)|\(s.id)|\(consent)|\(signals.map { Json.encode($0) } ?? "null")|\(p.user ?? "null")|\(p.org ?? "null")"
         if !force, said == a.said, let at = a.pushedAt, now - at < WebSharing.pushIntervalMillis { return }
         a.said = said
         a.pushedAt = now
@@ -461,6 +474,7 @@ package final class WebSharing {
         context["session"] = .string(s.id)
         context["last_seen"] = .int(s.lastSeen)
         context["consent"] = .string(consent)
+        if let v = signals { context["consent_signals"] = .object(v) }
         if let u = p.user { context["user"] = .string(u) }
         if let o = p.org { context["org"] = .string(o) }
         // The origin is checked again in the page, for a navigation between the check above and this.

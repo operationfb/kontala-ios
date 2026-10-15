@@ -18,11 +18,18 @@ private let contract2Screen: Set<String> = ["title", "navigation", "from"]
 /// The fields contract 2 adds to a tap: its trigger, form and search.
 private let contract2Click: Set<String> = ["trigger", "form", "search"]
 
+/// The kinds contract 3 adds: a change of what the visitor answered in a consent manager.
+package let contract3Kinds: Set<String> = ["consent_change"]
+
+/// The field contract 3 adds to every event: what the visitor had answered.
+private let contract3Signals = "consent_signals"
+
 /// Writes events as the Events API reads them (docs/openapi/events-v1.yaml).
 ///
 /// The API's decoder refuses an unknown field and fails the whole request with it, so what is written depends on the
-/// contract the region's collector has said it reads: 1 until its configuration says otherwise. What contract 2 adds
-/// is left out of a request for one that reads 1: its kinds whole, and its fields of an event contract 1 has.
+/// contract the region's collector has said it reads: 1 until its configuration says otherwise. What a later contract
+/// adds is left out of a request for one that reads an earlier: its kinds whole, and its fields of an event the
+/// earlier has.
 package final class WireEncoder {
     private let clock: Clock
     package var contract: Int
@@ -35,7 +42,9 @@ package final class WireEncoder {
     /// A request body: the batch's commonest context, and each event with only what differs from it, or nil when
     /// nothing of [events] is written at this contract. `sent_at` is added at send time.
     package func encodeBatch(_ events: [CapturedEvent]) -> JSONObject? {
-        let written = events.filter { contract >= 2 || !contract2Kinds.contains($0.kind) }
+        let written = events.filter {
+            (contract >= 2 || !contract2Kinds.contains($0.kind)) && (contract >= 3 || !contract3Kinds.contains($0.kind))
+        }
         if written.isEmpty { return nil }
         let batch = WireEncoder.commonest(written)
         return [
@@ -69,6 +78,7 @@ package final class WireEncoder {
         if let v = e.user { m["user"] = .string(v) }
         if let v = e.org { m["org"] = .string(v) }
         m["consent"] = .string(e.consent)
+        if contract >= 3, let s = e.signals { m[contract3Signals] = .object(s.toJson()) }
         if !e.isPageView, let v = e.view { m["view"] = .string(v) }
         for (k, v) in e.fields {
             if v.isNull { continue }
@@ -139,10 +149,33 @@ package final class WireEncoder {
         screen.filter { k, _ in !contract2Screen.contains(k) }
     }
 
-    /// [body], sealed at a later contract than its collector reads, written at contract 1: contract 2's kinds left out
-    /// whole, and its fields of every other event and of the contexts. Nil when nothing was left out, which makes a
-    /// refusal of [body] an SDK fault; its events may be none, when every one was of contract 2.
-    package static func downgrade(_ body: JSONObject) -> JSONObject? {
+    /// [body], sealed at a later contract than its collector reads, written at the contract before: a body of contract
+    /// 3 at contract 2, its kinds left out whole and every event's signals, and a body of contract 2 at contract 1,
+    /// contract 2's kinds left out whole, and its fields of every other event and of the contexts. A collector refusing
+    /// the copy too is sent the copy's copy, so a region rolled back loses only what it cannot read. Nil when nothing
+    /// was left out, which makes a refusal of [body] an SDK fault; its events may be none, when every one was of a
+    /// later contract.
+    package static func downgrade(_ body: JSONObject) -> JSONObject? { toContract2(body) ?? toContract1(body) }
+
+    private static func toContract2(_ body: JSONObject) -> JSONObject? {
+        var changed = false
+        var events: [JSON] = []
+        for raw in body.list("events") ?? [] {
+            guard var e = raw.object else { continue }
+            if let k = e.str("event"), contract3Kinds.contains(k) {
+                changed = true
+                continue
+            }
+            if e.removeValue(forKey: contract3Signals) != nil { changed = true }
+            events.append(.object(e))
+        }
+        if !changed { return nil }
+        var out = body
+        out["events"] = .array(events)
+        return out
+    }
+
+    private static func toContract1(_ body: JSONObject) -> JSONObject? {
         var changed = false
         func context(_ c: JSON?) -> JSONObject? {
             guard var out = c?.object else { return nil }

@@ -13,9 +13,10 @@ final class GoldensTests: XCTestCase {
     private func golden(
         _ name: String, _ description: String, options: KontalaOptions = KontalaOptions(), served: JSONObject? = nil,
         ids: DeviceIds? = nil, capture: JSONObject = ["data_layer": "discover", "clicks": true],
-        refused: [JSON] = [], file: StaticString = #filePath, line: UInt = #line, _ script: (Session) -> Void
+        refused: [JSON] = [], tcf: JSONObject? = nil, file: StaticString = #filePath, line: UInt = #line,
+        _ script: (Session) -> Void
     ) {
-        let s = startKontala(options, served: served, ids: ids)
+        let s = startKontala(options, served: served, ids: ids, tcf: tcf)
         script(s)
         s.sendAll()
         s.finish()
@@ -77,6 +78,40 @@ final class GoldensTests: XCTestCase {
             Kontala.track("size_selected", properties: ["size": "M"])
             Kontala.consent(.denied)
             s.scheduler.runDue()
+        }
+    }
+
+    func testAVisitThroughTheApiRecordingWhatTheVisitorAnsweredInAConsentManager() {
+        golden(
+            "consent_visit",
+            "A region on contract 3, and a consent manager that wrote the IAB TCF keys of a visitor who accepted "
+                + "storage and measurement alone: events held until the app's own consent, which records its answer "
+                + "for analytics, the app's answer for functional, then the visitor accepting everything in the "
+                + "consent manager, each change a consent_change under the screen it came on, and a denial, whose "
+                + "change is not sent and whose events record it: what every app SDK sends for the same calls.",
+            // Friction is off, as in api_visit: its speed is measured from frames.
+            options: KontalaOptions(consent: .unknown, friction: false),
+            served: contract3(),
+            capture: ["data_layer": "discover", "clicks": true, "scroll": true, "friction": true, "consent": true],
+            tcf: tcfMeasureOnly
+        ) { s in
+            Kontala.screen("/")
+            s.firstFrame()
+            s.advanceMillis(1000)
+            Kontala.consent(.granted)
+            s.advanceMillis(1000)
+            Kontala.setConsentSignals(functional: true)
+            s.advanceMillis(1000)
+            Kontala.screen("/product/42")
+            s.advanceMillis(1000)
+            s.platform.writeTcf(tcfAll)
+            s.advanceMillis(1000)
+            Kontala.consent(.denied)
+            s.advanceMillis(1000)
+            Kontala.track("wishlisted", properties: ["product_id": "42"])
+            s.advanceMillis(1000)
+            s.lifecycle(.inactive)
+            s.lifecycle(.hidden)
         }
     }
 }

@@ -10,10 +10,12 @@
   and the errors the app did not catch; and the coarse location Kontala's
   collector derives from the request's address. The IDFA goes to Kontala
   alone, for the app's own analytics and ad spend, and is never joined with
-  another company's data. Its one required-reason API is the system's
+  another company's data. Its required-reason APIs are the system's
   uptime (ProcessInfo.systemUptime), the clock a touch's, a frame's and a
   navigation's times are all read in, used only to measure time between
-  events in the app (35F9.1); the process's start time is read from the
+  events in the app (35F9.1), and the app's standard UserDefaults, read
+  only for the IAB TCF keys a consent manager in the app wrote there, which
+  are the app's own (CA92.1); the process's start time is read from the
   kernel's record of the process.
 -->
 <plist version="1.0">
@@ -30,6 +32,14 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>35F9.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
 			</array>
 		</dict>
 	</array>

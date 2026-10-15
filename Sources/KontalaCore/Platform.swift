@@ -41,6 +41,13 @@ package protocol Platform: Environment {
     /// none is, since a screen's web view may be laid out only then. Answered on any thread.
     func webViewShown(_ frames: Int, _ done: @escaping (Bool) -> Void)
 
+    /// The IAB TCF keys an app's consent manager wrote in the standard UserDefaults, as `tcfKeysOf` hands them over;
+    /// nil where they cannot be read.
+    func tcfKeys() -> JSONObject?
+
+    /// Tells [changed], on any thread, whenever a consent manager writes the IAB TCF keys.
+    func watchTcf(_ changed: @escaping () -> Void)
+
     /// Writes one line of the SDK's log.
     func log(_ line: String)
 
@@ -58,6 +65,8 @@ extension Platform {
         _ origins: [WebOrigin], _ names: [String], _ done: @escaping ([[String: String]]?) -> Void
     ) { done(nil) }
     package func webViewShown(_ frames: Int, _ done: @escaping (Bool) -> Void) { done(false) }
+    package func tcfKeys() -> JSONObject? { nil }
+    package func watchTcf(_ changed: @escaping () -> Void) {}
 }
 
 /// What the core says it captures, for the main thread, where taps, scrolling and friction are read off the app's

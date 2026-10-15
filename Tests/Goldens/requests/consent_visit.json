@@ -1,0 +1,294 @@
+{
+  "_comment": "A region on contract 3, and a consent manager that wrote the IAB TCF keys of a visitor who accepted storage and measurement alone: events held until the app's own consent, which records its answer for analytics, the app's answer for functional, then the visitor accepting everything in the consent manager, each change a consent_change under the screen it came on, and a denial, whose change is not sent and whose events record it: what every app SDK sends for the same calls.",
+  "capture": {
+    "data_layer": "discover",
+    "clicks": true,
+    "scroll": true,
+    "friction": true,
+    "consent": true
+  },
+  "refused": [],
+  "requests": [
+    {
+      "context": {
+        "app": {
+          "id": "com.example.shop",
+          "version": "3.2.0",
+          "build": "412",
+          "mode": "debug"
+        },
+        "locale": "en-US",
+        "timezone": "Europe/Amsterdam",
+        "display": {
+          "width": 800,
+          "height": 600
+        },
+        "library": {
+          "name": "kontala-ios",
+          "version": "0.1.0"
+        },
+        "user_agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Kontala/0.1.0",
+        "os": {
+          "name": "ios",
+          "version": "18.1"
+        },
+        "device": {
+          "manufacturer": "Apple",
+          "model": "iPhone16,1"
+        }
+      },
+      "events": [
+        {
+          "id": "event-1",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:02.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "consent_signals": {
+            "functional": false,
+            "analytics": true,
+            "targeting": false,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "screen": {
+            "name": "/",
+            "navigation": "launch"
+          }
+        },
+        {
+          "id": "event-2",
+          "event": "app_opened",
+          "timestamp": "2026-10-05T09:15:02.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "consent_signals": {
+            "functional": false,
+            "analytics": true,
+            "targeting": false,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "view": "event-1",
+          "properties": {
+            "cold": true
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-3",
+          "event": "consent_change",
+          "timestamp": "2026-10-05T09:15:04.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "consent_signals": {
+            "functional": true,
+            "analytics": true,
+            "targeting": false,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "view": "event-1",
+          "consent_change": {
+            "answers": {
+              "app": {
+                "analytics": true,
+                "functional": true
+              },
+              "tcf": {
+                "1": true,
+                "2": false,
+                "3": false,
+                "4": false,
+                "5": false,
+                "6": false,
+                "7": false,
+                "8": true,
+                "9": false,
+                "10": false,
+                "11": false
+              }
+            }
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-4",
+          "event": "view_time",
+          "timestamp": "2026-10-05T09:15:05.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "consent_signals": {
+            "functional": true,
+            "analytics": true,
+            "targeting": false,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "view": "event-1",
+          "engagement": {
+            "trigger": "view",
+            "visible_ms": 3000
+          },
+          "context": {
+            "app": {
+              "screen": "/"
+            }
+          }
+        },
+        {
+          "id": "event-5",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:05.000001Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "consent_signals": {
+            "functional": true,
+            "analytics": true,
+            "targeting": false,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "screen": {
+            "name": "/product/42",
+            "navigation": "push",
+            "from": "/"
+          }
+        },
+        {
+          "id": "event-6",
+          "event": "consent_change",
+          "timestamp": "2026-10-05T09:15:06.000000Z",
+          "device": "device-1",
+          "session": "session-1",
+          "consent": "granted",
+          "consent_signals": {
+            "functional": true,
+            "analytics": true,
+            "targeting": true,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "view": "event-5",
+          "consent_change": {
+            "answers": {
+              "app": {
+                "analytics": true,
+                "functional": true
+              },
+              "tcf": {
+                "1": true,
+                "2": true,
+                "3": true,
+                "4": true,
+                "5": true,
+                "6": true,
+                "7": true,
+                "8": true,
+                "9": true,
+                "10": true,
+                "11": true
+              }
+            }
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-7",
+          "event": "page_view",
+          "timestamp": "2026-10-05T09:15:08.000001Z",
+          "device": "device-2",
+          "session": "session-2",
+          "consent": "denied",
+          "consent_signals": {
+            "functional": true,
+            "analytics": false,
+            "targeting": true,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "screen": {
+            "name": "/product/42",
+            "navigation": "resume",
+            "from": "/product/42"
+          }
+        },
+        {
+          "id": "event-8",
+          "event": "wishlisted",
+          "timestamp": "2026-10-05T09:15:08.000002Z",
+          "device": "device-2",
+          "session": "session-2",
+          "consent": "denied",
+          "consent_signals": {
+            "functional": true,
+            "analytics": false,
+            "targeting": true,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "view": "event-7",
+          "properties": {
+            "product_id": "42"
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        },
+        {
+          "id": "event-9",
+          "event": "app_backgrounded",
+          "timestamp": "2026-10-05T09:15:09.000000Z",
+          "device": "device-2",
+          "session": "session-2",
+          "consent": "denied",
+          "consent_signals": {
+            "functional": true,
+            "analytics": false,
+            "targeting": true,
+            "source": "app",
+            "status": "ready",
+            "decided": true
+          },
+          "view": "event-7",
+          "properties": {
+            "foreground_ms": 7000
+          },
+          "context": {
+            "app": {
+              "screen": "/product/42"
+            }
+          }
+        }
+      ],
+      "sent_at": "2026-10-05T09:15:09.000000Z"
+    }
+  ]
+}

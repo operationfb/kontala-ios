@@ -202,6 +202,7 @@ final class SdkVectorsTests: XCTestCase {
             "friction": friction,
             "web_views": .array(
                 it.webOrigins.map { ["origin": .string($0.value), "cookie_domain": JSON($0.cookieDomain)] }),
+            "consent": it.consent.map { .object($0.toJson()) } ?? .null,
         ]
     }
 
@@ -212,7 +213,7 @@ final class SdkVectorsTests: XCTestCase {
     func testWire() throws {
         for c in cases("wire") {
             let want = c.obj("want")!
-            for contract in [1, 2] {
+            for contract in [1, 2, 3] {
                 let events = try (c.list("events") ?? []).map { try CapturedEvent.fromStored($0.object!) }
                 let body = WireEncoder(clock: Clock(), contract: contract).encodeBatch(events)
                 check(want, body.map { .object($0) } ?? .null, key: "\(contract)")
@@ -223,6 +224,33 @@ final class SdkVectorsTests: XCTestCase {
     func testDowngrade() {
         for c in cases("downgrade") {
             check(c, WireEncoder.downgrade(c.obj("in")!).map { .object($0) } ?? .null)
+        }
+    }
+
+    func testConsentRecorder() {
+        for c in cases("consent_recorder") {
+            let r = ConsentRecorder()
+            for raw in c.list("steps") ?? [] {
+                let step = raw.object!
+                let changed: Bool
+                if step.contains("serve") {
+                    changed = r.served(ConsentSection.parse(step["serve"]))
+                } else if let state = step.str("consent") {
+                    changed = r.legacy(KontalaConsent(rawValue: state)!)
+                } else if let set = step.obj("set") {
+                    changed = r.set(
+                        functional: set["functional"]?.bool, analytics: set["analytics"]?.bool,
+                        targeting: set["targeting"]?.bool)
+                } else {
+                    changed = r.tcf(step.obj("tcf"))
+                }
+                check(
+                    step,
+                    [
+                        "changed": .bool(changed), "signals": r.signals.map { .object($0.toJson()) } ?? .null,
+                        "answers": .object(r.answers()),
+                    ])
+            }
         }
     }
 
@@ -258,8 +286,9 @@ final class SdkVectorsTests: XCTestCase {
         let read: Set<String> = [
             "_comment", "collapse", "printable_text", "cut_bytes", "cut_runes", "printable", "canonical_event_name",
             "clean_query", "json_safe", "user_agent", "rfc3339", "uuid_v7", "safe_id", "safe_principal_id",
-            "named_principal", "web_origin", "identity", "device_ids", "config", "wire", "downgrade", "depth",
-            "depth_percent", "deeper",
+            "named_principal", "web_origin", "identity", "device_ids", "config", "wire", "downgrade",
+            "consent_recorder",
+            "depth", "depth_percent", "deeper",
         ]
         XCTAssertEqual(
             Set(v.keys).subtracting(read), [], "a section of sdk/testdata/vectors.json this suite does not read")

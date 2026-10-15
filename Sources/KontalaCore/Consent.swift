@@ -11,6 +11,7 @@ package let grantOnlyKinds: Set<String> = [
     "page_restore",
     "view_time",
     "page_type",
+    "consent_change",
 ]
 
 /// Holds events while consent is `unknown`, as tag/core/core.consent.ts's gate does, and releases them stamped with
