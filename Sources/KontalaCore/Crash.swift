@@ -1,8 +1,9 @@
 import Foundation
 
 /// What an uncaught exception's `js_error` row is stamped with, which the core publishes as it releases each granted
-/// event, for the thread that crashes: a process an uncaught exception ends never runs the core again, so the row is
-/// written then and there, beside the queue, and sent by the next launch (`queue/crash.jsonl`).
+/// event, and again as what the visitor answered in a consent manager changes, for the thread that crashes: a process
+/// an uncaught exception ends never runs the core again, so the row is written then and there, beside the queue, and
+/// sent by the next launch (`queue/crash.jsonl`).
 ///
 /// Only published while the property captures friction, consent is granted and the device may be written to, which
 /// is every condition such a row is sent under.
@@ -18,6 +19,9 @@ package struct CrashContext {
     package let device: String?
     package let user: String?
     package let org: String?
+    /// What the visitor had answered in a consent manager, which the row records as the event it was published from
+    /// did, and as the next event released would; nil where the region serves no consent section.
+    package let signals: KontalaConsentSignals?
     package let context: ContextSnapshot
     package let rules: FrictionRules
     /// The core's clock, read from the crashing thread, which it does not move.
@@ -27,7 +31,8 @@ package struct CrashContext {
 
     package init(
         dir: URL, view: String, session: String?, device: String?, user: String?, org: String?,
-        context: ContextSnapshot, rules: FrictionRules, now: @escaping () -> Int64, after: Int64
+        signals: KontalaConsentSignals?, context: ContextSnapshot, rules: FrictionRules, now: @escaping () -> Int64,
+        after: Int64
     ) {
         self.dir = dir
         self.view = view
@@ -35,10 +40,18 @@ package struct CrashContext {
         self.device = device
         self.user = user
         self.org = org
+        self.signals = signals
         self.context = context
         self.rules = rules
         self.now = now
         self.after = after
+    }
+
+    /// The same context, recording what the visitor answered since it was published.
+    package func withSignals(_ signals: KontalaConsentSignals?) -> CrashContext {
+        CrashContext(
+            dir: dir, view: view, session: session, device: device, user: user, org: org, signals: signals,
+            context: context, rules: rules, now: now, after: after)
     }
 }
 
@@ -124,6 +137,7 @@ package final class CrashRecorder {
             context: c.context,
             view: c.view,
             consent: "granted",
+            signals: c.signals,
             device: c.device,
             session: c.session,
             user: c.user,

@@ -346,15 +346,18 @@ package final class Core: PluginContext, WebSharingHost {
         if consentRecorder.tcf(platform.tcfKeys()) { signalsChanged() }
     }
 
-    /// What the visitor answered changed. The pages the app shows are told, unless [pages] is false, for a caller
-    /// that tells them itself; and where an event of this launch carried other answers, a `consent_change` says what
-    /// each source answered, filed under the screen in force, so the screen's view records what came after its screen
-    /// view.
+    /// What the visitor answered changed. A crash's row records it from now on, as the next event released does; the
+    /// pages the app shows are told, unless [pages] is false, for a caller that tells them itself; and where an event
+    /// of this launch carried other answers, a `consent_change` says what each source answered, filed under the screen
+    /// in force, so the screen's view records what came after its screen view.
     private func signalsChanged(pages: Bool = true) {
         let now = consentRecorder.signals
         signalsLock.lock()
         publishedSignals = now
         signalsLock.unlock()
+        // Published again here, not only as a change row is released: an answer no change row is sent for, such as one
+        // with no key a row could carry, releases nothing.
+        if let c = crashContext { crashContext = c.withSignals(now) }
         if pages { webViews.signalsChanged() }
         guard let current = now, stamped, current != lastSignals, view != nil else { return }
         let answers = consentRecorder.answers()
@@ -679,8 +682,9 @@ package final class Core: PluginContext, WebSharingHost {
         }
     }
 
-    /// What a crash's row would be stamped with now: the view in force, and the identity and context a granted event
-    /// was released with, while the property captures friction and the device may be written to.
+    /// What a crash's row would be stamped with now: the view in force, and the identity, the visitor's answers and
+    /// the context a granted event was released with, while the property captures friction and the device may be
+    /// written to.
     private func publishCrash(_ released: CapturedEvent) {
         guard let rules = switches.frictionRules, let s = store, s.writable, let dir = s.directory(), let v = view
         else {
@@ -701,6 +705,7 @@ package final class Core: PluginContext, WebSharingHost {
             device: released.device,
             user: principal.user,
             org: principal.org,
+            signals: released.signals,
             context: released.context.withScreen(screenName),
             rules: rules,
             now: { [clock] in clock.nowMicros() },

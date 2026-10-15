@@ -505,7 +505,7 @@
             defer { try? FileManager.default.removeItem(atPath: dir) }
             let store = FileStore(baseDir: dir)
             let context = CrashContext(
-                dir: store.directory()!, view: "view-1", session: "s", device: "d", user: nil, org: nil,
+                dir: store.directory()!, view: "view-1", session: "s", device: "d", user: nil, org: nil, signals: nil,
                 context: ContextSnapshot(appId: "com.example.shop", libraryName: "kontala-ios", libraryVersion: "0"),
                 rules: switches.frictionRules!, now: { 1_000_000 }, after: 0)
             var visible = true

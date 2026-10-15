@@ -27,9 +27,9 @@ final class MeasuresTests: XCTestCase {
     /// A session on contract 2 on its first screen, showing what [print] answers.
     private func session(
         _ options: KontalaOptions = KontalaOptions(), served: JSONObject? = contract2(), storage: String? = nil,
-        start: Int64 = goldenStartMicros, print: (() -> Int64?)? = { 1 }
+        start: Int64 = goldenStartMicros, tcf: JSONObject? = nil, print: (() -> Int64?)? = { 1 }
     ) -> Session {
-        let s = startKontala(options, facts: testFacts(storageDir: storage), served: served, start: start)
+        let s = startKontala(options, facts: testFacts(storageDir: storage), served: served, start: start, tcf: tcf)
         s.platform.fingerprinter = print
         s.onCore { $0.screenNumbered(1) }
         Kontala.screen("/catalogue")
@@ -399,6 +399,7 @@ final class MeasuresTests: XCTestCase {
         XCTAssertEqual("Pay", error.first?.obj("element")?.str("text"))
         XCTAssertEqual(view, error.first?.str("view"))
         XCTAssertEqual("granted", error.first?.str("consent"))
+        XCTAssertNil(error.first?["consent_signals"], "nothing of a consent manager's answers at contract 2")
         XCTAssertFalse(FileManager.default.fileExists(atPath: file.path), "sent once")
         next.finish()
     }
@@ -426,16 +427,19 @@ final class MeasuresTests: XCTestCase {
         }
     }
 
+    /// An exception nothing in the app caught, written beside the queue with what the core last published for it.
+    private func crash(_ s: Session) throws {
+        let context = try XCTUnwrap(s.core.crashContext)
+        XCTAssertTrue(
+            CrashRecorder().record(
+                Thrown(name: "NSInternalInconsistencyException", message: "No size chart"), context, tap: nil))
+        XCTAssertTrue(
+            FileManager.default.fileExists(atPath: context.dir.appendingPathComponent(CrashContext.file).path))
+    }
+
     func testAnOptOutDeletesACrashsRowWaitingForTheNextLaunch() throws {
         let dir = tempDir()
         let file = URL(fileURLWithPath: dir).appendingPathComponent("kontala").appendingPathComponent(CrashContext.file)
-        func crash(_ s: Session) throws {
-            let context = try XCTUnwrap(s.core.crashContext)
-            XCTAssertTrue(
-                CrashRecorder().record(
-                    Thrown(name: "NSInternalInconsistencyException", message: "No size chart"), context, tap: nil))
-            XCTAssertTrue(FileManager.default.fileExists(atPath: file.path))
-        }
         // A process an app's own handler kept alive, whose visitor opts out.
         let s = session(storage: dir)
         try crash(s)
@@ -458,6 +462,78 @@ final class MeasuresTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: file.path), "deleted as the launch clears the queue")
         next.sendAll()
         XCTAssertEqual([], next.collector.named("js_error"))
+        next.finish()
+    }
+
+    // What the visitor answered in a consent manager, which a crash's row records as every other row does.
+
+    /// What a consent manager writes before its visitor has answered.
+    private let tcfPending: JSONObject = ["IABTCF_CmpSdkID": 300, "IABTCF_gdprApplies": 1]
+
+    /// The process ended: the next launch on [dir], against a region serving [served], once it has sent its queue.
+    private func relaunch(_ s: Session, _ dir: String, _ served: JSONObject) -> Session {
+        let at = s.scheduler.nowMicros
+        s.finish()
+        let next = startKontala(facts: testFacts(storageDir: dir), served: served, start: at)
+        next.advanceMillis(500)
+        next.sendAll()
+        return next
+    }
+
+    func testAnErrorAtContract3RecordsTheAnswersTheEventBeforeItCarried() throws {
+        let dir = tempDir()
+        let s = session(served: contract3(), storage: dir, tcf: tcfPending)
+        // The visitor answers once the screen is on show, which a change row records.
+        s.platform.writeTcf(tcfMeasureOnly)
+        s.advanceMillis(100)
+        let answered = sent(s, "consent_change").first?.obj("consent_signals")
+        XCTAssertEqual(
+            [
+                "functional": false, "analytics": true, "targeting": false, "source": "tcf", "status": "ready",
+                "decided": true,
+            ], answered)
+        try crash(s)
+        let next = relaunch(s, dir, contract3())
+        let error = next.collector.named("js_error")
+        XCTAssertEqual(1, error.count)
+        XCTAssertEqual("granted", error.first?.str("consent"))
+        XCTAssertEqual(answered, error.first?.obj("consent_signals"), "the answers the last granted event carried")
+        next.finish()
+    }
+
+    func testAnErrorRecordsAnAnswerNoChangeRowWasSentFor() throws {
+        let dir = tempDir()
+        let s = session(served: contract3(), storage: dir, tcf: tcfPending)
+        XCTAssertEqual(["source": "tcf", "status": "pending"], sent(s, "page_view").first?.obj("consent_signals"))
+        // GDPR does not apply to the visitor: an answer with no purpose in it, so no change row says it, and no event
+        // is released between it and the crash.
+        var outsideGdpr = tcfPending
+        outsideGdpr["IABTCF_gdprApplies"] = 0
+        s.platform.writeTcf(outsideGdpr)
+        s.advanceMillis(100)
+        XCTAssertEqual([], sent(s, "consent_change"))
+        try crash(s)
+        let next = relaunch(s, dir, contract3())
+        let error = next.collector.named("js_error")
+        XCTAssertEqual(1, error.count)
+        XCTAssertEqual(
+            ["source": "tcf", "status": "ready"], error.first?.obj("consent_signals"),
+            "the answers the next event would carry")
+        next.finish()
+    }
+
+    func testAnErrorsAnswersAreNotSentToARegionBackOnContract2() throws {
+        let dir = tempDir()
+        let s = session(served: contract3(), storage: dir, tcf: tcfMeasureOnly)
+        try crash(s)
+        let file = URL(fileURLWithPath: dir).appendingPathComponent("kontala").appendingPathComponent(
+            CrashContext.file)
+        let written = Json.decodeObject(try String(contentsOf: file, encoding: .utf8).trimmingCharacters(in: .newlines))
+        XCTAssertNotNil(written?["signals"], "written with them")
+        let next = relaunch(s, dir, contract2())
+        let error = next.collector.named("js_error")
+        XCTAssertEqual(1, error.count)
+        XCTAssertNil(error.first?["consent_signals"], "contract 3's alone to send")
         next.finish()
     }
 
