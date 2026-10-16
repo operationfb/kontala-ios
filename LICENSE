@@ -1,0 +1,41 @@
+Kontala SDK License
+
+Copyright (c) 2026 Kontala. All rights reserved.
+
+This software and its documentation (the "Software") are licensed, not sold.
+
+1. Grant. Subject to these terms, Kontala grants you a non-exclusive,
+   non-transferable, royalty-free licence to use, copy and include the
+   Software, in source or compiled form, in applications you develop or
+   operate, solely so that those applications send data to services provided
+   by Kontala.
+
+2. Distribution. You may distribute the Software only as part of such an
+   application, compiled or bundled with it. You may not distribute the
+   Software on its own, publish it as a separate package or library, or sell,
+   sublicense or rent it.
+
+3. Restrictions. You may not use the Software, or any part or modified
+   version of it, to send data to any service other than one provided by
+   Kontala, or to build a product or service that competes with Kontala. You
+   may modify the Software only as far as needed to use it within your own
+   applications under section 1.
+
+4. Notices. You must keep this licence and the copyright notice above in
+   every copy of the Software's source.
+
+5. Ownership. Kontala keeps all rights, title and interest in the Software
+   that this licence does not expressly grant.
+
+6. Termination. This licence ends automatically if you breach it, or when
+   your agreement for Kontala's services ends. On termination you must stop
+   distributing new copies of the Software.
+
+7. No warranty. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+   KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+
+8. Limitation of liability. IN NO EVENT SHALL KONTALA BE LIABLE FOR ANY
+   CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
+   OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
+   THE USE OF OR OTHER DEALINGS IN THE SOFTWARE.

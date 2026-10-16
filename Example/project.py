@@ -2,12 +2,30 @@
 
 The project is generated rather than kept by hand, so that what it holds is reviewable here: run
 `python3 project.py` in sdk/ios/Example after adding a source file, and commit what it writes.
+
+`python3 project.py --package-url URL --package-version V --out DIR` writes the same shop into DIR instead, on the
+package a release published at URL, tag V, as an app names it: scripts/ios-release.sh builds it against the release it
+is about to push, and against the public mirror once it has.
 """
+import argparse
 import hashlib
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SDK = os.path.dirname(HERE)
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--package-url", help="a released package's repository, in place of the package beside the shop")
+parser.add_argument("--package-version", help="the release's tag, which the project names exactly")
+parser.add_argument("--out", default=HERE, help="where the project is written, the shop's own folder by default")
+args = parser.parse_args()
+if bool(args.package_url) != bool(args.package_version):
+    parser.error("--package-url and --package-version go together")
+OUT = os.path.abspath(args.out)
+
+
+def quoted(path):
+    return path if all(c.isalnum() or c in "._/" for c in path) else f'"{path}"'
 
 
 def oid(name):
@@ -31,6 +49,11 @@ for f in app_sources + test_sources:
     ids["build_" + f] = oid("build_" + f)
 
 rel = os.path.relpath(SDK, HERE)
+# The sources: beside the project, or where they are for a project written elsewhere.
+if OUT == HERE:
+    app_dir, tests_dir, tree = "KontalaShop", "KontalaShopUITests", "<group>"
+else:
+    app_dir, tests_dir, tree = os.path.join(HERE, "KontalaShop"), os.path.join(HERE, "KontalaShopUITests"), "<absolute>"
 
 common = {
     "SDKROOT": "iphoneos",
@@ -66,7 +89,7 @@ app_settings = {
     "KONTALA_WEBVIEW": "attached",
     "KONTALA_SESSION_MINUTES": "30",
     "PRODUCT_NAME": '"$(TARGET_NAME)"',
-    "INFOPLIST_FILE": "KontalaShop/Info.plist",
+    "INFOPLIST_FILE": quoted(app_dir + "/Info.plist"),
     "LD_RUNPATH_SEARCH_PATHS": '"$(inherited) @executable_path/Frameworks"',
     "ASSETCATALOG_COMPILER_APPICON_NAME": '""',
 }
@@ -114,10 +137,10 @@ o.append(f"\t\t{ids['products_group']} = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildr
          f"\t\t\t\t{ids['test_product']},\n\t\t\t);\n\t\t\tname = Products;\n\t\t\tsourceTree = \"<group>\";\n\t\t}};\n")
 children = "".join(f"\t\t\t\t{ids['file_' + f]},\n" for f in app_sources) + f"\t\t\t\t{ids['info_plist']},\n"
 o.append(f"\t\t{ids['app_group']} = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n{children}\t\t\t);\n"
-         f"\t\t\tpath = KontalaShop;\n\t\t\tsourceTree = \"<group>\";\n\t\t}};\n")
+         f"\t\t\tpath = {quoted(app_dir)};\n\t\t\tsourceTree = \"{tree}\";\n\t\t}};\n")
 children = "".join(f"\t\t\t\t{ids['file_' + f]},\n" for f in test_sources)
 o.append(f"\t\t{ids['tests_group']} = {{\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n{children}\t\t\t);\n"
-         f"\t\t\tpath = KontalaShopUITests;\n\t\t\tsourceTree = \"<group>\";\n\t\t}};\n")
+         f"\t\t\tpath = {quoted(tests_dir)};\n\t\t\tsourceTree = \"{tree}\";\n\t\t}};\n")
 o.append("/* End PBXGroup section */\n\n")
 
 o.append("/* Begin PBXNativeTarget section */\n")
@@ -182,17 +205,26 @@ for key, debug, release in [("project_config_list", "project_debug", "project_re
              f"\t\t\t\t{ids[release]},\n\t\t\t);\n\t\t\tdefaultConfigurationIsVisible = 0;\n\t\t\tdefaultConfigurationName = Release;\n\t\t}};\n")
 o.append("/* End XCConfigurationList section */\n\n")
 
-o.append("/* Begin XCLocalSwiftPackageReference section */\n")
-o.append(f"\t\t{ids['package_ref']} = {{\n\t\t\tisa = XCLocalSwiftPackageReference;\n\t\t\trelativePath = \"{rel}\";\n\t\t}};\n")
-o.append("/* End XCLocalSwiftPackageReference section */\n\n")
+if args.package_url:
+    o.append("/* Begin XCRemoteSwiftPackageReference section */\n")
+    o.append(f"\t\t{ids['package_ref']} = {{\n\t\t\tisa = XCRemoteSwiftPackageReference;\n"
+             f"\t\t\trepositoryURL = \"{args.package_url}\";\n\t\t\trequirement = {{\n\t\t\t\tkind = exactVersion;\n"
+             f"\t\t\t\tversion = \"{args.package_version}\";\n\t\t\t}};\n\t\t}};\n")
+    o.append("/* End XCRemoteSwiftPackageReference section */\n\n")
+    package = f"\t\t\tpackage = {ids['package_ref']};\n"
+else:
+    o.append("/* Begin XCLocalSwiftPackageReference section */\n")
+    o.append(f"\t\t{ids['package_ref']} = {{\n\t\t\tisa = XCLocalSwiftPackageReference;\n\t\t\trelativePath = \"{rel}\";\n\t\t}};\n")
+    o.append("/* End XCLocalSwiftPackageReference section */\n\n")
+    package = ""
 
 o.append("/* Begin XCSwiftPackageProductDependency section */\n")
-o.append(f"\t\t{ids['package_dep']} = {{\n\t\t\tisa = XCSwiftPackageProductDependency;\n\t\t\tproductName = Kontala;\n\t\t}};\n")
+o.append(f"\t\t{ids['package_dep']} = {{\n\t\t\tisa = XCSwiftPackageProductDependency;\n{package}\t\t\tproductName = Kontala;\n\t\t}};\n")
 o.append("/* End XCSwiftPackageProductDependency section */\n")
 
 o.append(f"\t}};\n\trootObject = {ids['project']};\n}}\n")
 
-proj = os.path.join(HERE, "KontalaShop.xcodeproj")
+proj = os.path.join(OUT, "KontalaShop.xcodeproj")
 os.makedirs(os.path.join(proj, "xcshareddata", "xcschemes"), exist_ok=True)
 with open(os.path.join(proj, "project.pbxproj"), "w") as f:
     f.write("".join(o))
@@ -225,4 +257,4 @@ scheme = f"""<?xml version="1.0" encoding="UTF-8"?>
 """
 with open(os.path.join(proj, "xcshareddata", "xcschemes", "KontalaShop.xcscheme"), "w") as f:
     f.write(scheme)
-print("wrote", proj, "package at", rel)
+print("wrote", proj, "package at", args.package_url and f"{args.package_url} {args.package_version}" or rel)
